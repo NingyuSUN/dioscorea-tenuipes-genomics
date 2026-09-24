@@ -1,6 +1,37 @@
 # Dioscorea tenuipes Genome Assembly and Annotation Pipeline
 
-![Pipeline](figures/pipeline_workflow.png)
+```mermaid
+flowchart TB
+    subgraph ASM["Genome assembly and annotation"]
+        direction TB
+        reads["Nanopore and Illumina reads"] --> assemble["Assembly and polishing<br/>Guppy, Flye, Medaka, Hypo · 01–07"]
+        assemble --> draft[("Draft genome<br/>contig level")]
+        draft --> qc["Quality assessment<br/>BUSCO, QUAST · 08–09"]
+        draft --> annot["Repeat masking and gene annotation<br/>RepeatMasker, HISAT2, StringTie, BRAKER · 10–15"]
+        rnaseq["RNA-seq reads"] --> annot
+        draft --> review["Scaffolding and annotation review<br/>RagTag, RepeatModeler, RNA evidence · 23–29"]
+    end
+
+    subgraph POP["Population genomics · Snakemake workflow for 32–55"]
+        direction TB
+        reseq["Illumina resequencing"] --> calling["Joint variant calling<br/>BWA, GATK · 21"]
+        calling --> vcf[("Population VCF")] --> audit["Input audit · 30–31"] --> panels["Genotype masking and panels · 32"]
+        panels --> structure["PCA, ADMIXTURE, FST<br/>33–34"]
+        panels --> relation["Networks, NJ trees, relatedness<br/>44–49"]
+        panels --> influence["Sample-influence PCA and FST<br/>53–55"]
+    end
+
+    subgraph ORG["Organelle genomes · supplementary"]
+        direction TB
+        plastome["Plastome assembly, annotation<br/>and indel validation · 16–18, 35–43"]
+        mito["Mitochondrial assembly attempts<br/>19–20 · no complete assembly"]
+    end
+
+    draft -. "reference" .-> calling
+    reads -.-> ORG
+```
+
+Numbers refer to scripts in `scripts/`. Solid arrows show data flow; the dashed arrow from the draft genome marks its use as the mapping reference for population variant calling. The organelle analyses are supplementary.
 
 This repository contains scripts used to assemble and annotate the genome of *Dioscorea tenuipes* using **Nanopore long reads, Illumina short reads, and RNA-seq data**.
 
@@ -14,7 +45,7 @@ The workflow includes:
 - Chloroplast genome reconstruction
 - Mitochondrial genome reconstruction
 - Population genomics
-- Comparative genomics and phylogenetic analyses
+- Comparative genomics and phylogenetic analyses (described below; scripts not included)
 
 The scripts were originally designed for execution on a **high-performance computing (HPC) environment**, but they can be adapted for other systems.
 
@@ -256,7 +287,7 @@ Original contig coordinates are kept throughout. Exact filters and their limitat
 
 ## 10. Comparative Genomics and Phylogeny
 
-Comparative analyses are performed to investigate evolutionary relationships among *Dioscorea* species.
+Comparative analyses are performed to investigate evolutionary relationships among *Dioscorea* species. The scripts for these analyses are not included in this repository.
 
 Main steps include:
 
@@ -276,7 +307,6 @@ config/       Snakemake configuration (template, conda overlay, assembly module)
 workflow/     Snakemake rules, conda envs, default profile, dry-run test
 tests/        Unit tests for the population, relationship and plastome code
 docs/         Runbooks and workflow verification records
-figures/      Figures used in the README
 ```
 
 ---
