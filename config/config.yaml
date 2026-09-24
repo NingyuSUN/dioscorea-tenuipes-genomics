@@ -1,0 +1,37 @@
+# Population-genomics workflow configuration. Replace the input paths.
+#
+# results_dir MUST be a new directory. Every numbered script refuses to reuse
+# an existing output directory.
+results_dir: results
+
+# Modules built by the default target: population, relationships, influence.
+targets: [population, relationships, influence]
+
+inputs:
+  # Jointly called, biallelic-SNP population VCF (bgzipped).
+  population_vcf: data/Dtenuipes_population.vcf.gz
+  # TSV with columns sample, group, ...; sample order must match the VCF.
+  sample_manifest: data/sample_manifest.tsv
+  # Directory holding main.sample_qc.bcftools.tsv (read by script 34).
+  audit_package: data/audit_package
+
+tools:
+  # Empty values take the tool from PATH (or from the per-rule conda envs with
+  # `--sdm conda`). Set absolute paths to pin specific installations.
+  # Scripts 32/33/44/53/55: Python >= 3.11 with numpy, pandas, matplotlib, scipy.
+  python: ""
+  # Directory holding plink (1.90b6.21), admixture (1.3.0) and vcftools (0.1.16).
+  popgen_bin: ""
+  # Scripts 45/49/54: numpy, scipy, pandas, matplotlib, biopython, splitspy 0.0.10.
+  analysis_python: ""
+  # R 4.5 with SNPRelate, GENESIS, GWASTools, BiocParallel, ape, phangorn.
+  rscript: ""
+  # Prepended to PATH, e.g. a directory with bcftools 1.13.
+  extra_path: ""
+
+relationships:
+  replicates: 100   # half-contig subsets in script 45
+
+# Directories of completed runs that must never be written to. The workflow
+# stops if results_dir is one of these or lies inside one.
+frozen_dirs: []

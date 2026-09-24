@@ -1,0 +1,3 @@
+# Snakemake run metadata
+.snakemake/
+__pycache__/

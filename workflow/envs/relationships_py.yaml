@@ -1,0 +1,15 @@
+# Scripts 45/49/54 and workflow/scripts/network_crosscheck.py, at the versions
+# of the original analysis. splitspy 0.0.10 is used only for the circular
+# ordering; its native weight solver must stay unused (docs/NETWORK_SOLVER_AUDIT.md).
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy=2.5.3
+  - scipy=1.18.1
+  - pandas=3.0.5
+  - matplotlib=3.11.2
+  - biopython=1.88
+  - pip
+  - pip:
+      - splitspy==0.0.10

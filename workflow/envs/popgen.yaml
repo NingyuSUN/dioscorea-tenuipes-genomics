@@ -1,0 +1,20 @@
+# Scripts 32/33/44/53/55, used with `--sdm conda`. PLINK/ADMIXTURE/VCFtools
+# match the original analysis (popgen_production.explicit.txt). bcftools does
+# not: the original analysis used bcftools 1.13, but conda's htslib 1.13 needs
+# openssl 1.1 and cannot coexist with Python 3.12 (scripts need >=3.11), so
+# this env resolves to a current bcftools. Set tools.extra_path to a bcftools
+# 1.13 build to match the original exactly.
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.12
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib
+  - plink=1.90b6.21
+  - admixture=1.3.0
+  - vcftools=0.1.16
+  - bcftools>=1.13
+  - htslib

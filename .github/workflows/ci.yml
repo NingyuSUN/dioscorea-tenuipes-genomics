@@ -1,0 +1,37 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: workflow/envs/ci.yaml
+          environment-name: dt-ci
+          cache-environment: true
+
+      - name: Compile genotype comparison helper
+        run: |
+          gcc -O3 -Wall -Wextra scripts/lib/compare_population_genotypes.c \
+            -I"$CONDA_PREFIX/include" -L"$CONDA_PREFIX/lib" -Wl,-rpath,"$CONDA_PREFIX/lib" -lhts \
+            -o "$RUNNER_TEMP/compare_population_genotypes"
+
+      - name: Unit tests
+        env:
+          DTE_AUDIT_BINARY: ${{ runner.temp }}/compare_population_genotypes
+          MPLBACKEND: Agg
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python -m unittest discover -s tests -v
+
+      - name: Snakemake dry run, lint and frozen-directory guard
+        run: bash workflow/tests/dryrun.sh

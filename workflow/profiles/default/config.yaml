@@ -1,0 +1,11 @@
+# Default local profile for a workstation with about 32 GB RAM. The memory cap
+# is the binding limit; each rule declares mem_mb from the PLINK/ADMIXTURE
+# settings of its script. Adjust cores and mem_mb to your machine.
+#   snakemake --profile workflow/profiles/default
+cores: 16
+resources:
+  - mem_mb=26000
+keep-going: false
+rerun-incomplete: false
+printshellcmds: true
+show-failed-logs: true

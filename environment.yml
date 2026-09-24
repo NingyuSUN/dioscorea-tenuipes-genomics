@@ -1,0 +1,33 @@
+name: dioscorea-pipeline
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python>=3.10
+  - perl
+  - openjdk>=11
+  - pigz
+  - gzip
+  - flye
+  - medaka
+  - minimap2
+  - samtools
+  - bwa
+  - hypo
+  - fastqc
+  - trimmomatic
+  - busco
+  - quast
+  - repeatmasker
+  - rmblast
+  - trf
+  - hisat2
+  - stringtie
+  - braker3
+  - augustus
+  - bcftools
+  - htslib
+  - tabix
+  - getorganelle
+  - pip

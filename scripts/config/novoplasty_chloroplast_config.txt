@@ -1,0 +1,38 @@
+Project:
+-----------------------
+Project name          = D.tenuipes_chloroplast
+Type                  = chloro
+Genome Range          = 120000-200000
+K-mer                 = 33
+Max memory            = 90
+Extended log          = 0
+Save assembled reads  = no
+Seed Input            = /path/to/tenuipes_cp.consensus.fasta
+Extend seed directly  = no
+Reference sequence    = /path/to/D_tokoro_chloroplast_reference.fasta
+Variance detection    = yes
+Chloroplast sequence  =
+
+Dataset 1:
+-----------------------
+Read Length           = 150
+Insert size           = 300
+Platform              = illumina
+Single/Paired         = PE
+Combined reads        =
+Forward reads         = /path/to/Dt_Izu_1.fq
+Reverse reads         = /path/to/Dt_Izu_2.fq
+Store Hash            = yes
+
+Heteroplasmy:
+-----------------------
+MAF                   =
+HP exclude list       =
+PCR-free              =
+
+Optional:
+-----------------------
+Insert size auto      = yes
+Use Quality Scores    = no
+Reduce ambigious N's  =
+Output path           = /path/to/novoplasty_chloroplast_output/

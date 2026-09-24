@@ -1,0 +1,21 @@
+# CI only: unit tests (tests/) plus the Snakemake dry run. The original
+# analysis used bcftools/htslib 1.13, which conda cannot co-install with
+# Python 3.12; CI uses the current release. The C helper is compiled with the system gcc against
+# this htslib.
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.12
+  - numpy
+  - scipy
+  - pandas
+  - matplotlib
+  - biopython=1.88
+  - bcftools>=1.13
+  - htslib
+  - snakemake-minimal>=8
+  - pip
+  - pysam
+  - pip:
+      - splitspy==0.0.10

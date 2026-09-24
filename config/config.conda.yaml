@@ -1,0 +1,9 @@
+# Overlay for `--sdm conda`: take every tool from the per-rule conda envs in
+# workflow/envs/ rather than from explicitly configured installations.
+#   snakemake --sdm conda --configfile config/config.yaml config/config.conda.yaml
+tools:
+  python: ""
+  popgen_bin: ""
+  analysis_python: ""
+  rscript: ""
+  extra_path: ""

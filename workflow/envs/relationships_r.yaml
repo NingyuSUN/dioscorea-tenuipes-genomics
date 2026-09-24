@@ -1,0 +1,15 @@
+# Scripts 46/47/47b, at the versions of the original analysis
+# (R 4.5.3; SNPRelate 1.44.0, GENESIS 2.40.0, GWASTools 1.56.0,
+# BiocParallel 1.44.0, gdsfmt 1.46.0, ape 5.8-1, phangorn 2.12.1).
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-base=4.5
+  - bioconductor-snprelate=1.44.0
+  - bioconductor-genesis=2.40.0
+  - bioconductor-gwastools=1.56.0
+  - bioconductor-biocparallel=1.44.0
+  - bioconductor-gdsfmt=1.46.0
+  - r-ape=5.8_1
+  - r-phangorn=2.12.1
