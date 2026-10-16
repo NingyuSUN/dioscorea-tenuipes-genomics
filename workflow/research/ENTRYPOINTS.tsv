@@ -25,3 +25,26 @@ scripts/research/nuclear_ils/inference/reestimate_panel.py	linux_guarded_entrypo
 scripts/research/panthaica/matched27/run_matched27.py	linux_guarded_entrypoint	Infer paired with/without-panthaica trees on the same 27 nuclear loci.	--config --execute
 scripts/research/panthaica/matched27/sensitivity/run_sensitivity.py	linux_guarded_entrypoint	Evaluate paired callable-site masking and leave-one-locus-out panthaica sensitivity.	--config --execute
 scripts/research/panthaica/matched27/prepare_matched27.py	entrypoint	Prepare paired matched-locus, callable-site and leave-one-locus-out panthaica inputs.	--mode --with-alignment --without-alignment --partitions --config --out
+scripts/research/population/historical/run_full_panel.py	entrypoint	Fit and compare fixed-dimensional genotype-likelihood covariance models on the full SNP panel.	--config --execute
+scripts/research/population/historical/compare_full_panel.py	entrypoint	Summarize covariance and subspace differences across fixed-panel model arms.	--config --execute
+scripts/research/population/historical/run_plink_arm.py	entrypoint	Compute the hard-call PLINK comparison arm for the same population panel.	--config --execute
+scripts/research/nuclear/historical/recover_nuclear.py	entrypoint	Recover BUSCO nuclear markers from the selected genome assembly.	--config --execute
+scripts/research/nuclear/historical/run_nuclear_main.py	entrypoint	Coordinate the historical expanded nuclear panel and concatenated IQ-TREE analysis.	--config --execute
+scripts/research/nuclear/historical/prepare_loci.py	entrypoint	Split the frozen concatenated matrix into loci while omitting all-missing taxon rows.	--config --execute
+scripts/research/nuclear/historical/genomic_cds_translation.py	entrypoint	Verify genomic CDS translation and marker binding for the hime2 reference.	--config --execute
+scripts/research/chloroplast/historical/prepare_inputs.py	entrypoint	Prepare the historical paired chloroplast matrix and partition-model controls.	--config --execute
+scripts/research/chloroplast/historical/prepare_source_inputs.py	entrypoint	Prepare fixed-column chloroplast source variants for paired AU comparisons.	--config --execute
+scripts/research/chloroplast/historical/audit_hachi_nuclear_coverage.py	entrypoint	Measure nuclear-marker read coverage for the Hachi sample.	--config --execute
+scripts/research/chloroplast/historical/compare_published_edo.py	entrypoint	Compare the published Edo plastome with read-supported chloroplast states.	--config --execute
+scripts/research/chloroplast/historical/published_edo_controls.py	entrypoint	Evaluate source and callable-site controls for the published Edo plastome.	--config --execute
+scripts/research/chloroplast/historical/validate_denovo_cp_reads.py	entrypoint	Validate de novo chloroplast contigs against paired read evidence.	--config --execute
+scripts/research/chloroplast_ils/historical/prepare_inputs.py	entrypoint	Prepare the frozen nuclear guide and observed chloroplast quartet/distance inputs.	--config --execute
+scripts/research/chloroplast_ils/historical/make_report_figures.py	entrypoint	Plot conditional plastid topology and distance-scenario summaries.	--config --execute
+scripts/research/nuclear_ils/historical/fit_history.py	entrypoint	Fit a fixed conditional species-history scenario to the retained nuclear evidence.	--config --execute
+scripts/research/nuclear_ils/historical/audit_panel.py	entrypoint	Audit conditional simulation manifests, generated alignments and inference jobs.	--config --execute
+scripts/research/panthaica/historical/run_rna_pipeline_draft.py	entrypoint	Perform the historical RNA read-QC and transcriptome-assembly stages.	--config --execute
+scripts/research/panthaica/historical/run_marker_recovery_draft.py	entrypoint	Recover BUSCO markers from the assembled panthaica transcriptome.	--config --execute
+scripts/research/panthaica/historical/prepare_alignment_controls.py	entrypoint	Add panthaica to frozen nuclear profiles and construct matched-column controls.	--config --execute
+scripts/research/chloroplast/historical/run_expanded_trees.py	entrypoint	Execute the historical expanded 98-tip chloroplast comparison on admitted fixed-column matrices.	--config --execute
+scripts/research/chloroplast/historical/run_cp97.py	entrypoint	Evaluate the historical chloroplast topology after removing the Hachi tip.	--config --execute
+scripts/research/chloroplast/historical/freeze_contract.py	entrypoint	Create a hash-bound configuration/code manifest outside the fresh tree-output directory.	--stage --config --execute

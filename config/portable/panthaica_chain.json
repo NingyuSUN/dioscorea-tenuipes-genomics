@@ -1,0 +1,194 @@
+{
+  "receipts": "../../results_portable/workflow_receipts/panthaica_chain",
+  "frozen_dirs": [
+    "../../data/portable",
+    "../../tools"
+  ],
+  "stages": {
+    "panthaica_rna_qc": {
+      "script": "scripts/research/panthaica/historical/run_rna_pipeline_draft.py",
+      "config": "panthaica_rna_qc.json",
+      "inputs": [
+        "metadata/RNA_QC_CONFIG.json",
+        "../../data/portable/panthaica/DOWNLOAD_RECEIPT.json",
+        "metadata/METADATA_MIGRATION.json",
+        "../../data/portable/panthaica/raw/CRR515167_f1.fq.gz",
+        "../../data/portable/panthaica/raw/CRR515167_r2.fq.gz"
+      ],
+      "outputs": [
+        "../../results_portable/panthaica/qc/qc_configured/QC_RECEIPT.json",
+        "../../results_portable/panthaica/qc/qc_configured/STATUS.json"
+      ],
+      "after": [],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/panthaica/qc/qc_configured"
+      ]
+    },
+    "panthaica_rna_pilot": {
+      "script": "scripts/research/panthaica/historical/run_rna_pipeline_draft.py",
+      "config": "panthaica_rna_pilot.json",
+      "inputs": [
+        "metadata/RNA_QC_CONFIG.json",
+        "../../data/portable/panthaica/DOWNLOAD_RECEIPT.json",
+        "../../results_portable/panthaica/qc/qc_configured/QC_RECEIPT.json",
+        "../../data/portable/panthaica/RNASPADES_INSTALL_RECEIPT.json",
+        "metadata/METADATA_MIGRATION.json",
+        "../../data/portable/panthaica/raw/CRR515167_f1.fq.gz",
+        "../../data/portable/panthaica/raw/CRR515167_r2.fq.gz"
+      ],
+      "outputs": [
+        "../../results_portable/panthaica/assembly/pilot_configured/PILOT_RECEIPT.json",
+        "../../results_portable/panthaica/assembly/pilot_configured/STATUS.json",
+        "../../results_portable/panthaica/assembly/pilot_configured/rnaspades/transcripts.fasta"
+      ],
+      "after": [
+        "panthaica_rna_qc"
+      ],
+      "threads": 4,
+      "tools": [
+        "../../tools/cutadapt",
+        "../../tools/rnaspades.py",
+        "../../tools/python3",
+        "../../tools/systemd-run",
+        "../../tools/systemctl",
+        "../../tools/time"
+      ],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/panthaica/assembly/pilot_configured"
+      ],
+      "bind_inputs": {
+        "qc_receipt": "../../results_portable/panthaica/qc/qc_configured/QC_RECEIPT.json"
+      }
+    },
+    "panthaica_rna_full": {
+      "script": "scripts/research/panthaica/historical/run_rna_pipeline_draft.py",
+      "config": "panthaica_rna_full.json",
+      "inputs": [
+        "metadata/RNA_QC_CONFIG.json",
+        "../../data/portable/panthaica/DOWNLOAD_RECEIPT.json",
+        "../../results_portable/panthaica/qc/qc_configured/QC_RECEIPT.json",
+        "../../data/portable/panthaica/RNASPADES_INSTALL_RECEIPT.json",
+        "../../results_portable/panthaica/assembly/pilot_configured/PILOT_RECEIPT.json",
+        "metadata/METADATA_MIGRATION.json",
+        "../../data/portable/panthaica/raw/CRR515167_f1.fq.gz",
+        "../../data/portable/panthaica/raw/CRR515167_r2.fq.gz"
+      ],
+      "outputs": [
+        "../../results_portable/panthaica/assembly/full_configured/ASSEMBLY_RECEIPT.json",
+        "../../results_portable/panthaica/assembly/full_configured/STATUS.json",
+        "../../results_portable/panthaica/assembly/full_configured/rnaspades/transcripts.fasta"
+      ],
+      "after": [
+        "panthaica_rna_qc",
+        "panthaica_rna_pilot"
+      ],
+      "threads": 4,
+      "tools": [
+        "../../tools/cutadapt",
+        "../../tools/rnaspades.py",
+        "../../tools/python3",
+        "../../tools/systemd-run",
+        "../../tools/systemctl",
+        "../../tools/time"
+      ],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/panthaica/assembly/full_configured"
+      ],
+      "bind_inputs": {
+        "qc_receipt": "../../results_portable/panthaica/qc/qc_configured/QC_RECEIPT.json",
+        "pilot_receipt": "../../results_portable/panthaica/assembly/pilot_configured/PILOT_RECEIPT.json"
+      }
+    },
+    "panthaica_marker": {
+      "script": "scripts/research/panthaica/historical/run_marker_recovery_draft.py",
+      "config": "panthaica_marker.json",
+      "inputs": [
+        "metadata/MARKER_READINESS_EVIDENCE.json",
+        "../../results_portable/panthaica/assembly/full_configured/rnaspades/transcripts.fasta",
+        "../../results_portable/panthaica/assembly/full_configured/ASSEMBLY_RECEIPT.json",
+        "../../data/portable/panthaica/DOWNLOAD_RECEIPT.json",
+        "metadata/METADATA_MIGRATION.json"
+      ],
+      "outputs": [
+        "../../results_portable/panthaica/marker_recovery_configured/MARKER_RECOVERY_RECEIPT.json",
+        "../../results_portable/panthaica/marker_recovery_configured/CANDIDATE_RECEIPT.json",
+        "../../results_portable/panthaica/marker_recovery_configured/STATUS.json"
+      ],
+      "after": [
+        "panthaica_rna_full"
+      ],
+      "threads": 4,
+      "tools": [
+        "../../tools/busco/bin/busco",
+        "../../tools/busco/bin/python",
+        "../../tools/busco/bin/metaeuk",
+        "../../tools/systemd-run",
+        "../../tools/systemctl",
+        "../../tools/time"
+      ],
+      "input_directories": [
+        "../../data/portable/panthaica",
+        "../../data/portable",
+        "../../tools/busco"
+      ],
+      "generated_input_directories": [
+        "../../results_portable/panthaica/assembly/full_configured"
+      ],
+      "output_directories": [
+        "../../results_portable/panthaica/marker_recovery_configured"
+      ],
+      "bind_inputs": {
+        "transcripts": "../../results_portable/panthaica/assembly/full_configured/rnaspades/transcripts.fasta",
+        "assembly_receipt": "../../results_portable/panthaica/assembly/full_configured/ASSEMBLY_RECEIPT.json"
+      }
+    },
+    "panthaica_alignment": {
+      "script": "scripts/research/panthaica/historical/prepare_alignment_controls.py",
+      "config": "panthaica_alignment.json",
+      "inputs": [
+        "../../data/portable/panthaica/ALIGNMENT_CONTROL_EVIDENCE.json",
+        "metadata/MARKER_READINESS_EVIDENCE.json",
+        "../../results_portable/panthaica/marker_recovery_configured/MARKER_RECOVERY_RECEIPT.json",
+        "metadata/METADATA_MIGRATION.json"
+      ],
+      "outputs": [
+        "../../results_portable/panthaica/alignment_controls_configured/ALIGNMENT_CONTROL_RECEIPT.json",
+        "../../results_portable/panthaica/alignment_controls_configured/ALIGNMENT_AUDIT.json",
+        "../../results_portable/panthaica/alignment_controls_configured/fixed173_without_panthaica.faa",
+        "../../results_portable/panthaica/alignment_controls_configured/fixed173_with_panthaica.faa",
+        "../../results_portable/panthaica/alignment_controls_configured/partitions_fixed173.json",
+        "../../results_portable/panthaica/alignment_controls_configured/partitions_matchedL.json",
+        "../../results_portable/panthaica/alignment_controls_configured/matchedL_column_map.tsv"
+      ],
+      "after": [
+        "panthaica_marker"
+      ],
+      "threads": 1,
+      "tools": [
+        "../../tools/mafft"
+      ],
+      "input_directories": [
+        "../../data/portable/panthaica",
+        "../../data/portable",
+        "../../tools/busco"
+      ],
+      "generated_input_directories": [
+        "../../results_portable/panthaica/marker_recovery_configured"
+      ],
+      "output_directories": [
+        "../../results_portable/panthaica/alignment_controls_configured"
+      ],
+      "bind_inputs": {
+        "marker_receipt": "../../results_portable/panthaica/marker_recovery_configured/MARKER_RECOVERY_RECEIPT.json"
+      }
+    }
+  }
+}

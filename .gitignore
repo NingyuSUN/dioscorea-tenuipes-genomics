@@ -9,3 +9,7 @@ __pycache__/
 /config/*.local.yaml
 .pytest_cache/
 *.pyc
+
+# Local paths, portable workflow results and receipts
+config/portable/*.local.json
+results_portable/

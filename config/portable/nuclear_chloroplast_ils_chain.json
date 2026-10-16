@@ -1,0 +1,75 @@
+{
+  "receipts": "../../results_portable/workflow_receipts/nuclear_chloroplast_ils_chain",
+  "frozen_dirs": [
+    "../../data/portable",
+    "../../tools"
+  ],
+  "stages": {
+    "nuclear_fit": {
+      "script": "scripts/research/nuclear_ils/historical/fit_history.py",
+      "config": "nuclear_fit.json",
+      "inputs": [
+        "../../data/portable/nuclear_ils/FIT_CONTRACT.json",
+        "../../data/portable/nuclear_ils/snapshot_manifest.json",
+        "../../data/portable/nuclear_ils/locus_manifest.json",
+        "../../data/portable/nuclear_ils/model_table.tsv",
+        "../../data/portable/nuclear_ils/FIT_SCOPE_RECEIPT.json"
+      ],
+      "outputs": [
+        "../../results_portable/nuclear_ils/fitted/SOURCE_BINDINGS.json",
+        "../../results_portable/nuclear_ils/fitted/NUMERICAL_RULES.json",
+        "../../results_portable/nuclear_ils/fitted/FIXED_SPECIES_TOPOLOGY.nwk",
+        "../../results_portable/nuclear_ils/fitted/QUARTET_GENE_AUDIT.json",
+        "../../results_portable/nuclear_ils/fitted/QUARTET_COUNTS.json",
+        "../../results_portable/nuclear_ils/fitted/PER_GENE_QUARTETS.tsv.gz",
+        "../../results_portable/nuclear_ils/fitted/CLOCK_PROFILE.json",
+        "../../results_portable/nuclear_ils/fitted/CLOCK_PAIR_RESIDUALS.tsv",
+        "../../results_portable/nuclear_ils/fitted/CLOCK_MISFIT.json",
+        "../../results_portable/nuclear_ils/fitted/S0_FITTED.json",
+        "../../results_portable/nuclear_ils/fitted/RECEIPT.json"
+      ],
+      "after": [],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [
+        "../../data/portable/nuclear_ils"
+      ],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/nuclear_ils/fitted"
+      ]
+    },
+    "chloroplast_prepare": {
+      "script": "scripts/research/chloroplast_ils/historical/prepare_inputs.py",
+      "config": "chloroplast_prepare.json",
+      "inputs": [
+        "../../data/portable/chloroplast_ils/source_alignment.fa",
+        "../../data/portable/chloroplast_ils/cp98_tree.nwk",
+        "../../data/portable/chloroplast_ils/cp97_tree.nwk",
+        "../../results_portable/nuclear_ils/fitted/S0_FITTED.json"
+      ],
+      "outputs": [
+        "../../results_portable/chloroplast_ils/inputs/hime2_hachi_joint_acgt.fa",
+        "../../results_portable/chloroplast_ils/inputs/joint_acgt_columns_1based.txt",
+        "../../results_portable/chloroplast_ils/inputs/cp98_tree.nwk",
+        "../../results_portable/chloroplast_ils/inputs/cp97_tree.nwk",
+        "../../results_portable/chloroplast_ils/inputs/guide.json",
+        "../../results_portable/chloroplast_ils/inputs/observed.json",
+        "../../results_portable/chloroplast_ils/inputs/SOURCE_BINDINGS.json"
+      ],
+      "after": [
+        "nuclear_fit"
+      ],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/chloroplast_ils/inputs"
+      ],
+      "bind_inputs": {
+        "nuclear_S0": "../../results_portable/nuclear_ils/fitted/S0_FITTED.json"
+      }
+    }
+  }
+}

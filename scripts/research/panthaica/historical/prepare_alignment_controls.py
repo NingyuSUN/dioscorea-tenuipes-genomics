@@ -5,14 +5,20 @@ Preserve original profiles and trim masks; create paired matrices only, never tr
 import argparse,csv,datetime as dt,fcntl,hashlib,json,os,re,signal,subprocess,time
 from pathlib import Path
 
-ROOT=Path('workspace/wgs/dt_research_p57_20260930/panthaica')
+ROOT=None
+PORTABLE=None
 NEW='Dioscorea_panthaica_DIPA1_transcriptome'
 AA=set('ACDEFGHIKLMNPQRSTVWY')
 EVIDENCE_SHA='ccbfb51d4c14a9853d36ce769dfc48f17b8a2c4d931409005ab1423fcbe3409d'
 MARKER_EVIDENCE_SHA='de212e8f6f5502f5d75e68f8d509433c7c9e9cc6638cae304b6ce16ef456d660'
 BASELINE_SHA='982addd02b6a6d0a188aa0de9b8e688b95bec926703094ab7f9238a8a91cc01e'
-MAFFT='workspace/miniconda3/envs/busco/bin/mafft'
+MAFFT=None
 
+
+try:
+    from .portable_inputs import Config, report, require_preflight, run_directory
+except ImportError:
+    from portable_inputs import Config, report, require_preflight, run_directory
 
 def now():return dt.datetime.now(dt.timezone.utc).isoformat()
 def sha(p):
@@ -109,24 +115,24 @@ def read_bound(p,expected):
     if sha(p)!=expected:raise ValueError('Source SHA256 mismatch: '+str(p))
     return read_fasta(p)
 def task_path(p):
-    q=Path(p).resolve()
-    if ROOT not in q.parents:raise ValueError('Expected task-local evidence path')
-    return q
+    # Sources may live outside the output root; immutable receipts bind their bytes.
+    return PORTABLE.resolve(p) if PORTABLE else Path(p).resolve()
 
 def execute(a):
     def interrupted(sig,frame):raise KeyboardInterrupt('Alignment preparation interrupted; owned child group will stop')
     signal.signal(signal.SIGTERM,interrupted)
     if ROOT.resolve()!=ROOT:raise ValueError('Task root path guard')
-    ep=Path(a.panel_evidence) if a.panel_evidence else Path(__file__).with_name('ALIGNMENT_CONTROL_EVIDENCE.json')
-    panel_sha=a.panel_evidence_sha256 if a.panel_evidence else EVIDENCE_SHA
+    panel_row=PORTABLE.input('panel_evidence',EVIDENCE_SHA)
+    ep=Path(panel_row['path']);panel_sha=panel_row['sha256']
     if sha(ep)!=panel_sha:raise ValueError('Frozen selected-panel evidence changed')
-    e=json.loads(ep.read_text());taxa=e['taxa'];base=Path(e['baseline_root'])
+    e=PORTABLE.relocated(json.loads(ep.read_text()));taxa=e['taxa'];base=Path(e['baseline_root'])
     panel_id=e.get('panel_id','original_genome_main_no2661')
     if not re.fullmatch(r'[A-Za-z0-9_-]+',panel_id):raise ValueError('Invalid panel ID')
     if len(taxa)!=12 or len(set(taxa))!=12 or NEW in taxa or e['genes']!=173 or e['columns']<=0:raise ValueError('Expected selected panel with 12 old taxa and original 173 loci')
     if not a.panel_evidence and (e['columns']!=68796 or e['main_sha256']!=BASELINE_SHA):raise ValueError('Original baseline default changed')
-    mep=Path(__file__).with_name('MARKER_READINESS_EVIDENCE.json')
-    if sha(mep)!=MARKER_EVIDENCE_SHA:raise ValueError('Original fixed173 candidate-quality anchor changed')
+    marker_row=PORTABLE.input('marker_evidence',MARKER_EVIDENCE_SHA)
+    mep=Path(marker_row['path'])
+    if sha(mep)!=marker_row['sha256']:raise ValueError('Original fixed173 candidate-quality anchor changed')
     marker_anchor={r['marker']:r for r in json.loads(mep.read_text())['baseline']['markers']}
     if len(e['markers'])!=173 or {r['marker'] for r in e['markers']}!=set(marker_anchor):raise ValueError('Selected panel must contain exactly original fixed173 marker IDs')
     if a.panel_evidence:
@@ -139,16 +145,16 @@ def execute(a):
     if len(summary['partitions'])!=173 or {p['gene'] for p in summary['partitions']}!=set(marker_anchor):raise ValueError('Selected-panel partition set differs from original173')
     marker_path=task_path(a.marker_receipt)
     if sha(marker_path)!=a.marker_receipt_sha256:raise ValueError('Marker receipt hash mismatch')
-    marker=json.loads(marker_path.read_text())
-    if marker.get('status')!='COMPLETE' or marker.get('readiness_evidence_sha256')!=MARKER_EVIDENCE_SHA:raise ValueError('Require complete lineage-bound marker run')
+    marker=PORTABLE.relocated(json.loads(marker_path.read_text()))
+    if marker.get('status')!='COMPLETE' or marker.get('readiness_evidence_sha256')!=marker_row['sha256']:raise ValueError('Require complete lineage-bound marker run')
     assembly_path=task_path(marker['assembly_receipt_path'])
     if sha(assembly_path)!=marker['assembly_receipt_sha256']:raise ValueError('Assembly receipt changed')
-    assembly=json.loads(assembly_path.read_text())
+    assembly=PORTABLE.relocated(json.loads(assembly_path.read_text()))
     if assembly.get('status')!='COMPLETE' or assembly.get('input_scope')!='FULL_CRR515167' or assembly.get('source_raw_pairs')!=28665951 or assembly.get('formal_marker_eligible') is not True:raise ValueError('Prefix/pilot/unknown assembly rejected')
     if assembly['transcripts']['sha256']!=marker['transcripts_sha256']:raise ValueError('Assembly/marker input mismatch')
     candidate_path=task_path(marker['candidate_receipt_path'])
     if sha(candidate_path)!=marker['candidate_receipt_sha256']:raise ValueError('Candidate receipt changed')
-    candidates=json.loads(candidate_path.read_text());audit={r['marker']:r for r in candidates['candidate_audit']}
+    candidates=PORTABLE.relocated(json.loads(candidate_path.read_text()));audit={r['marker']:r for r in candidates['candidate_audit']}
     if len(candidates['candidate_audit'])!=173 or len(audit)!=173 or set(audit)!={r['marker'] for r in e['markers']}:raise ValueError('Candidate/fixed173 marker set mismatch')
     run=task_path(marker['busco_run']);table=run/'run_embryophyta_odb10/full_table.tsv'
     if sha(table)!=candidates['full_table_sha256']:raise ValueError('BUSCO full table changed')
@@ -161,7 +167,7 @@ def execute(a):
     if v.stdout+v.stderr!=e['mafft']['version_stdout']+e['mafft']['version_stderr']:raise ValueError('MAFFT version changed')
     with (ROOT/'ALIGNMENT_CONTROL.lock').open('a+') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        out=ROOT/('alignment_controls_'+panel_id+'_'+dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ'));out.mkdir()
+        out=run_directory(PORTABLE,ROOT) or ROOT/('alignment_controls_'+panel_id+'_'+dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ'));out.mkdir(parents=True,exist_ok=False)
         state={'status':'RUNNING','stage':'SELF_TEST','started_utc':now(),'worker_pid':os.getpid(),'process_start_ticks':Path('/proc/self/stat').read_text().split()[21],'driver_sha256':sha(__file__),'panel_id':panel_id,'panel_root':str(base),'selected_panel_main_sha256':e['main_sha256'],'profile_evidence_path':str(ep),'profile_evidence_sha256':panel_sha,'marker_receipt_sha256':a.marker_receipt_sha256,'assembly_receipt_sha256':marker['assembly_receipt_sha256'],'tree_run':False,'alignment_threads':1,'source_type':'GENOME_PLUS_TRANSCRIPTOME'}
         save(out/'STATUS.json',state)
         try:
@@ -226,11 +232,28 @@ def execute(a):
             state.update(status='INTERRUPTED' if isinstance(exc,KeyboardInterrupt) else 'FAILED',error=type(exc).__name__+': '+str(exc),finished_utc=now());save(out/'STATUS.json',state);raise
         print(json.dumps(state,indent=2))
 
+
+def plan(config_path):
+    c=Config(config_path);root=c.path('root');fixed=run_directory(c,root)
+    return {'script':'prepare_alignment_controls','inputs':[c.input('panel_evidence',EVIDENCE_SHA),c.input('marker_evidence',MARKER_EVIDENCE_SHA),c.input('marker_receipt')],
+      'outputs':[str(fixed/n) for n in ['ALIGNMENT_CONTROL_RECEIPT.json','ALIGNMENT_AUDIT.json','fixed173_without_panthaica.faa','fixed173_with_panthaica.faa','partitions_fixed173.json','partitions_matchedL.json','matchedL_column_map.tsv']] if fixed else [], 'output_directory':str(fixed or root),'required_threads':1,
+      'dynamic_outputs':{'pattern':'alignment_controls_<panel_id>_<UTC timestamp>/',
+        'files':['ALIGNMENT_CONTROL_RECEIPT.json','ALIGNMENT_AUDIT.json','STATUS.json','fixed173_without_panthaica.faa','fixed173_with_panthaica.faa','partitions_fixed173.json','partitions_matchedL.json','matchedL_column_map.tsv'],
+        'conditional_files':['matchedL_without_panthaica.faa','matchedL_with_panthaica.faa']},
+      'tools':{'mafft':c.tool('mafft')},'python_packages':[],
+      'transitive_inputs':'panel evidence binds baseline main.faa, summary.json, raw/aligned/trimmed per-locus FASTA and frozen masks; marker receipt binds assembly, BUSCO table and candidates',
+      'scientific_contract':'12 old taxa, fixed 173 loci; keeplength/mapout; 50% locus coverage; old sequence bytes preserved; no tree inference'}
+
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--execute',action='store_true');p.add_argument('--marker-receipt');p.add_argument('--marker-receipt-sha256');p.add_argument('--panel-evidence');p.add_argument('--panel-evidence-sha256');a=p.parse_args()
-    if bool(a.panel_evidence)!=bool(a.panel_evidence_sha256):p.error('Selected panel requires both evidence path and its explicit SHA256')
-    if not a.execute:
-        print(json.dumps({'status':'DRY_RUN_NO_WRITES_NO_ALIGNMENTS_NO_TREES','method':'Add into original untrimmed profile with keeplength+mapout; project frozen trim mask','old_taxa':12,'fixed_loci':173,'default_original_columns':68796,'selected_panel_evidence':a.panel_evidence or 'default frozen original173','selected_panel_sha256':a.panel_evidence_sha256 or EVIDENCE_SHA,'candidate_locus_coverage_minimum':0.5,'mafft_threads':1,'maxiterate':0,'future_execute_requires_synthetic_MAFFT_self_test':True},indent=2));return
-    if not a.marker_receipt or not a.marker_receipt_sha256:p.error('Explicit complete marker receipt path and hash required')
-    execute(a)
-if __name__=='__main__':main()
+    global ROOT,PORTABLE,MAFFT
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--config',required=True,type=Path);p.add_argument('--execute',action='store_true');a=p.parse_args()
+    PORTABLE=Config(a.config);spec=plan(a.config)
+    if not a.execute:return report(spec)
+    require_preflight(spec);ROOT=PORTABLE.path('root');MAFFT=spec['tools']['mafft']
+    row=PORTABLE.input('marker_receipt')
+    if not row['sha256']:raise ValueError('marker_receipt requires an explicit SHA-256')
+    a.marker_receipt=row['path'];a.marker_receipt_sha256=row['sha256']
+    a.panel_evidence=None if PORTABLE.data.get('original_panel',True) else PORTABLE.input('panel_evidence')['path']
+    a.panel_evidence_sha256=PORTABLE.input('panel_evidence',EVIDENCE_SHA)['sha256']
+    execute(a);return 0
+if __name__=='__main__':raise SystemExit(main())

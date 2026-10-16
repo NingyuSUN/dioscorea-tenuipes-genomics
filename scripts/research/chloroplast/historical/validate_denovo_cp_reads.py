@@ -5,9 +5,27 @@ Coordinates remain each original contig; no reference sequence supplies a base.
 from pathlib import Path
 import datetime,hashlib,json,os,resource,statistics,subprocess,time
 import recover_hachi_cp_callable as call
-R=Path('workspace/wgs/dt_research_p57_20260930');O=R/'denovo_readback'
-CONTIG=R/'denovo_1m/assembly/final.contigs.fa'
-M='workspace/miniconda3/envs/ragtag/bin/minimap2';S='workspace/miniconda3/envs/busco/bin/samtools'
+import portable_cli as portable
+O=None
+
+def configure(config_path):
+ return portable.configure(config_path, ('contigs','assembly_receipt','screen','minimap2','samtools','out'),('reads',))
+
+def plan(config_path):
+ c=configure(config_path)
+ if len(c['reads'])!=2: raise ValueError('Exactly two ordered read mates are required')
+ inputs={k:c[k] for k in ('contigs','assembly_receipt','screen')}
+ inputs.update(read1=c['reads'][0],read2=c['reads'][1],script=Path(__file__),helper=Path(call.__file__))
+ names=['STATUS.json','FROZEN_PARAMETERS.json','MAPPING_COMMANDS.json','all_contigs.bam','all_contigs.bam.bai']
+ if c['screen'].is_file():
+  for row in json.loads(c['screen'].read_text())['alignments']:
+   if row['qualifying_cp_like']:
+    name=row['contig']
+    if Path(name).name!=name or name in ('.','..'): raise ValueError('Unsafe contig filename')
+    names.extend(name+suffix for suffix in ('.per_base.tsv','.validated.fa','.metrics.json'))
+ return portable.contract(c['_config'],inputs,{n:c['out']/n for n in names},
+                          {k:c[k] for k in ('minimap2','samtools')},c['out'],required_threads=8)
+
 def sha(p):return call.sha256_file(p)
 def save(n,x): (O/n).write_text(json.dumps(x,indent=2)+'\n')
 def fa(p):
@@ -17,15 +35,17 @@ def fa(p):
   else:d[k]+=l.strip()
  return d
 def limit():resource.setrlimit(resource.RLIMIT_AS,(4*1024**3,4*1024**3))
-def run():
- assert not O.exists();O.mkdir()
+def run(c):
+ global O
+ O=c['out'];CONTIG=c['contigs'];M=str(c['minimap2']);S=str(c['samtools'])
+ assert not O.exists();O.mkdir(parents=True,exist_ok=False)
  start=time.monotonic();state={'status':'RUNNING','stage':'PREFLIGHT','started_utc':call.utcnow(),'pid':os.getpid(),'proc_start_ticks':Path('/proc/self/stat').read_text().split()[21]};save('STATUS.json',state)
  try:
-  assembly=json.loads((R/'denovo_1m/STATUS.json').read_text());assert assembly['status']=='COMPLETE_REVIEW_PENDING' and sha(CONTIG)==assembly['contigs_sha256']
-  screen=json.loads((R/'denovo_cp_audit/SCREEN.json').read_text());assert screen['source_contigs_sha256']==sha(CONTIG)
+  assembly=json.loads(c['assembly_receipt'].read_text());assert assembly['status']=='COMPLETE_REVIEW_PENDING' and sha(CONTIG)==assembly['contigs_sha256']
+  screen=json.loads(c['screen'].read_text());assert screen['source_contigs_sha256']==sha(CONTIG)
   ids=list(dict.fromkeys(x['contig'] for x in screen['alignments'] if x['qualifying_cp_like']))
   refs=fa(CONTIG);assert len(ids)==3 and all(x in refs for x in ids)
-  reads=[R/f'pilot_1m_qualityonly/clean_R{i}.fastq.gz' for i in [1,2]]
+  reads=c['reads']
   inputs={str(p):{'bytes':p.stat().st_size,'sha256':sha(p)} for p in [CONTIG,*reads]}
   save('FROZEN_PARAMETERS.json',{'created_before_readback':True,'source_input_hashes':inputs,'CP_like_contigs':ids,'all_assembly_contigs_in_mapping':len(refs),'base_calling_thresholds':call.THRESHOLDS,'additional_filters':{'contig_end_mask_each_end':200,'min_fraction_of_contig_median_depth':0.25,'max_fraction_of_contig_median_depth':4.0,'median_scope':'all internal positions with ACGT template depth>0, after BQ/MAPQ/template filters','assembly_disagreement':'mask N, retain observed raw dominant and count'}})
   bam=O/'all_contigs.bam';cmd=[M,'-ax','sr','-t','4',str(CONTIG),*map(str,reads)];sort=[S,'sort','-@','2','-m','256M','-o',str(bam),'-']
@@ -66,4 +86,9 @@ def run():
   state.update(status='COMPLETE_READBACK_PARTIAL_CONTIGS',stage='COMPLETE',completed_utc=call.utcnow(),elapsed_seconds=time.monotonic()-start,max_RSS_MiB=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024,child_peak_RSS_MiB=resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss/1024,contigs=reports,BAM_sha256=sha(bam),limitations=['All contigs from same nonrandom first1M paired reads; not independent biological validation.','CP-like origin inferred from similarity/depth; nuclear or mitochondrial CP-like material not mathematically excluded.','No physical circular structure, IR copy count or heteroplasmy validation.','Unmarked PCR duplicates remain; overlapping mates collapsed only.','Contig ends and indel neighborhoods masked. No reference base filling.'])
   save('STATUS.json',state);print(json.dumps(state,indent=2))
  except BaseException as e:state.update(status='FAILED_PRESERVED',error=repr(e),completed_utc=call.utcnow());save('STATUS.json',state);raise
-if __name__=='__main__':run()
+def main():
+ a=portable.parser(__doc__).parse_args();checked=portable.preflight(plan(a.config))
+ if not a.execute: portable.emit(checked); return
+ run(configure(a.config))
+
+if __name__=='__main__':main()

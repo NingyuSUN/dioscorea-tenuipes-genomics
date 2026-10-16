@@ -1,6 +1,6 @@
 # Script catalogue
 
-Every analysis script below has a specific purpose. `historical_reference` means the script retains a stage-specific directory/configuration contract and is kept for method review. `entrypoint` means a command-line entry point is present; it does not imply a newly reproduced scientific result.
+Every analysis script below has a specific purpose. The 22 historical scripts now have configurable command-line entry points described in [portable workflows](../workflow/portable/README.md). `entrypoint` means a command-line entry point is present; it does not imply a newly reproduced scientific result.
 
 ## Assembly, annotation, organelles and population analysis
 
@@ -88,9 +88,9 @@ Every analysis script below has a specific purpose. `historical_reference` means
 | [balanced_fst.py](../scripts/research/population/balanced_fst.py) | Compare Weir–Cockerham and Hudson FST across all balanced IZU sample subsets. | entrypoint |
 | [explicit3.py](../scripts/research/population/explicit3.py) | Compute the explicit three-genotype likelihood reference model for covariance analysis. | library |
 | [extract_original_panel.py](../scripts/research/population/extract_original_panel.py) | Extract original-panel genotype likelihoods while preserving sample and site identity. | entrypoint |
-| [historical/compare_full_panel.py](../scripts/research/population/historical/compare_full_panel.py) | Summarize covariance and subspace differences across fixed-panel model arms. | historical_reference |
-| [historical/run_full_panel.py](../scripts/research/population/historical/run_full_panel.py) | Fit and compare fixed-dimensional genotype-likelihood covariance models on the full SNP panel. | historical_reference |
-| [historical/run_plink_arm.py](../scripts/research/population/historical/run_plink_arm.py) | Compute the hard-call PLINK comparison arm for the same population panel. | historical_reference |
+| [historical/compare_full_panel.py](../scripts/research/population/historical/compare_full_panel.py) | Summarize covariance and subspace differences across fixed-panel model arms. | entrypoint |
+| [historical/run_full_panel.py](../scripts/research/population/historical/run_full_panel.py) | Fit and compare fixed-dimensional genotype-likelihood covariance models on the full SNP panel. | entrypoint |
+| [historical/run_plink_arm.py](../scripts/research/population/historical/run_plink_arm.py) | Compute the hard-call PLINK comparison arm for the same population panel. | entrypoint |
 | [influence_fst_core.py](../scripts/research/population/influence_fst_core.py) | Compute population allele-count masks and Weir–Cockerham FST components. | library |
 | [panel_identity.py](../scripts/research/population/panel_identity.py) | Verify sample and variant identity when binding the original SNP panel to genotype likelihoods. | library |
 | [pl_diagnostic.py](../scripts/research/population/pl_diagnostic.py) | Audit three-genotype likelihoods and their alignment to the selected SNP panel. | entrypoint |
@@ -109,10 +109,10 @@ Every analysis script below has a specific purpose. `historical_reference` means
 | [audit_quartet_projection.py](../scripts/research/nuclear/audit_quartet_projection.py) | Independently verify focal-quartet projection inputs and bootstrap counts. | entrypoint |
 | [build_busco_matrices.py](../scripts/research/nuclear/build_busco_matrices.py) | Build single-copy BUSCO amino-acid matrices with fixed occupancy and marker exclusions. | entrypoint |
 | [gene_concordance.py](../scripts/research/nuclear/gene_concordance.py) | Count concordant, alternative and unresolved gene-tree splits for each reference branch. | entrypoint |
-| [historical/genomic_cds_translation.py](../scripts/research/nuclear/historical/genomic_cds_translation.py) | Verify genomic CDS translation and marker binding for the hime2 reference. | historical_reference |
-| [historical/prepare_loci.py](../scripts/research/nuclear/historical/prepare_loci.py) | Split the frozen concatenated matrix into loci while omitting all-missing taxon rows. | historical_reference |
-| [historical/recover_nuclear.py](../scripts/research/nuclear/historical/recover_nuclear.py) | Recover BUSCO nuclear markers from the selected genome assembly. | historical_reference |
-| [historical/run_nuclear_main.py](../scripts/research/nuclear/historical/run_nuclear_main.py) | Coordinate the historical expanded nuclear panel and concatenated IQ-TREE analysis. | historical_reference |
+| [historical/genomic_cds_translation.py](../scripts/research/nuclear/historical/genomic_cds_translation.py) | Verify genomic CDS translation and marker binding for the hime2 reference. | entrypoint |
+| [historical/prepare_loci.py](../scripts/research/nuclear/historical/prepare_loci.py) | Split the frozen concatenated matrix into loci while omitting all-missing taxon rows. | entrypoint |
+| [historical/recover_nuclear.py](../scripts/research/nuclear/historical/recover_nuclear.py) | Recover BUSCO nuclear markers from the selected genome assembly. | entrypoint |
+| [historical/run_nuclear_main.py](../scripts/research/nuclear/historical/run_nuclear_main.py) | Coordinate the historical expanded nuclear panel and concatenated IQ-TREE analysis. | entrypoint |
 | [marker_structure.py](../scripts/research/nuclear/marker_structure.py) | Compare candidate historical marker segments with current gene-model structure. | entrypoint |
 | [project_locus_quartets.py](../scripts/research/nuclear/project_locus_quartets.py) | Project existing nuclear point and bootstrap trees onto the fixed focal quartet. | entrypoint |
 | [run_loci.py](../scripts/research/nuclear/run_loci.py) | Infer one supported IQ-TREE phylogeny per retained nuclear locus. | entrypoint |
@@ -123,17 +123,17 @@ Every analysis script below has a specific purpose. `historical_reference` means
 
 | Script | Purpose | Role |
 |---|---|---|
-| [historical/audit_hachi_nuclear_coverage.py](../scripts/research/chloroplast/historical/audit_hachi_nuclear_coverage.py) | Measure nuclear-marker read coverage for the Hachi sample. | historical_reference |
-| [historical/compare_published_edo.py](../scripts/research/chloroplast/historical/compare_published_edo.py) | Compare the published Edo plastome with read-supported chloroplast states. | historical_reference |
-| [historical/prepare_inputs.py](../scripts/research/chloroplast/historical/prepare_inputs.py) | Prepare the historical paired chloroplast matrix and partition-model controls. | historical_reference |
-| [historical/prepare_source_inputs.py](../scripts/research/chloroplast/historical/prepare_source_inputs.py) | Prepare fixed-column chloroplast source variants for paired AU comparisons. | historical_reference |
-| [historical/published_edo_controls.py](../scripts/research/chloroplast/historical/published_edo_controls.py) | Evaluate source and callable-site controls for the published Edo plastome. | historical_reference |
+| [historical/audit_hachi_nuclear_coverage.py](../scripts/research/chloroplast/historical/audit_hachi_nuclear_coverage.py) | Measure nuclear-marker read coverage for the Hachi sample. | entrypoint |
+| [historical/compare_published_edo.py](../scripts/research/chloroplast/historical/compare_published_edo.py) | Compare the published Edo plastome with read-supported chloroplast states. | entrypoint |
+| [historical/prepare_inputs.py](../scripts/research/chloroplast/historical/prepare_inputs.py) | Prepare the historical paired chloroplast matrix and partition-model controls. | entrypoint |
+| [historical/prepare_source_inputs.py](../scripts/research/chloroplast/historical/prepare_source_inputs.py) | Prepare fixed-column chloroplast source variants for paired AU comparisons. | entrypoint |
+| [historical/published_edo_controls.py](../scripts/research/chloroplast/historical/published_edo_controls.py) | Evaluate source and callable-site controls for the published Edo plastome. | entrypoint |
 | [historical/recover_hachi_cp_callable.py](../scripts/research/chloroplast/historical/recover_hachi_cp_callable.py) | Recover callable chloroplast bases from competitive-reference read alignments. | library |
-| [historical/run_cp97.py](../scripts/research/chloroplast/historical/run_cp97.py) | Evaluate the historical chloroplast topology after removing the Hachi tip. | historical_reference |
-| [historical/run_expanded_trees.py](../scripts/research/chloroplast/historical/run_expanded_trees.py) | Execute the historical expanded 98-tip chloroplast comparison on admitted fixed-column matrices. | historical_reference |
+| [historical/run_cp97.py](../scripts/research/chloroplast/historical/run_cp97.py) | Evaluate the historical chloroplast topology after removing the Hachi tip. | entrypoint |
+| [historical/run_expanded_trees.py](../scripts/research/chloroplast/historical/run_expanded_trees.py) | Execute the historical expanded 98-tip chloroplast comparison on admitted fixed-column matrices. | entrypoint |
 | [historical/source_au_common.py](../scripts/research/chloroplast/historical/source_au_common.py) | Validate chloroplast alignments and canonicalize unrooted source-control topologies. | library |
 | [historical/test_preparation_only.py](../scripts/research/chloroplast/historical/test_preparation_only.py) | Test the historical chloroplast matrix preparation without tree inference. | historical_test |
-| [historical/validate_denovo_cp_reads.py](../scripts/research/chloroplast/historical/validate_denovo_cp_reads.py) | Validate de novo chloroplast contigs against paired read evidence. | historical_reference |
+| [historical/validate_denovo_cp_reads.py](../scripts/research/chloroplast/historical/validate_denovo_cp_reads.py) | Validate de novo chloroplast contigs against paired read evidence. | entrypoint |
 | [prepare_expanded_cp.py](../scripts/research/chloroplast/prepare_expanded_cp.py) | Admit validated additional plastomes into the fixed-column chloroplast matrix. | entrypoint |
 | [recover_hachi_cp_callable.py](../scripts/research/chloroplast/recover_hachi_cp_callable.py) | Recover callable chloroplast bases from competitive-reference read alignments. | entrypoint |
 | [run_cp_trees.py](../scripts/research/chloroplast/run_cp_trees.py) | Infer paired chloroplast trees on identical retained alignment columns. | linux_guarded_entrypoint |
@@ -146,9 +146,9 @@ Every analysis script below has a specific purpose. `historical_reference` means
 | Script | Purpose | Role |
 |---|---|---|
 | [historical/exec_verified_scope.py](../scripts/research/panthaica/historical/exec_verified_scope.py) | Verify local resource limits for historical panthaica recovery steps. | runtime_guard |
-| [historical/prepare_alignment_controls.py](../scripts/research/panthaica/historical/prepare_alignment_controls.py) | Add panthaica to frozen nuclear profiles and construct matched-column controls. | historical_reference |
-| [historical/run_marker_recovery_draft.py](../scripts/research/panthaica/historical/run_marker_recovery_draft.py) | Recover BUSCO markers from the assembled panthaica transcriptome. | historical_reference |
-| [historical/run_rna_pipeline_draft.py](../scripts/research/panthaica/historical/run_rna_pipeline_draft.py) | Perform the historical RNA read-QC and transcriptome-assembly stages. | historical_reference |
+| [historical/prepare_alignment_controls.py](../scripts/research/panthaica/historical/prepare_alignment_controls.py) | Add panthaica to frozen nuclear profiles and construct matched-column controls. | entrypoint |
+| [historical/run_marker_recovery_draft.py](../scripts/research/panthaica/historical/run_marker_recovery_draft.py) | Recover BUSCO markers from the assembled panthaica transcriptome. | entrypoint |
+| [historical/run_rna_pipeline_draft.py](../scripts/research/panthaica/historical/run_rna_pipeline_draft.py) | Perform the historical RNA read-QC and transcriptome-assembly stages. | entrypoint |
 | [historical/test_alignment_controls.py](../scripts/research/panthaica/historical/test_alignment_controls.py) | Test preservation of original taxa and columns when adding panthaica. | historical_test |
 | [historical/test_marker_recovery_draft.py](../scripts/research/panthaica/historical/test_marker_recovery_draft.py) | Test panthaica marker admission and sequence-translation checks. | historical_test |
 | [historical/test_rna_pipeline_draft.py](../scripts/research/panthaica/historical/test_rna_pipeline_draft.py) | Test RNA-stage receipt and paired-read validation. | historical_test |
@@ -162,8 +162,8 @@ Every analysis script below has a specific purpose. `historical_reference` means
 
 | Script | Purpose | Role |
 |---|---|---|
-| [historical/audit_panel.py](../scripts/research/nuclear_ils/historical/audit_panel.py) | Audit conditional simulation manifests, generated alignments and inference jobs. | historical_reference |
-| [historical/fit_history.py](../scripts/research/nuclear_ils/historical/fit_history.py) | Fit a fixed conditional species-history scenario to the retained nuclear evidence. | historical_reference |
+| [historical/audit_panel.py](../scripts/research/nuclear_ils/historical/audit_panel.py) | Audit conditional simulation manifests, generated alignments and inference jobs. | entrypoint |
+| [historical/fit_history.py](../scripts/research/nuclear_ils/historical/fit_history.py) | Fit a fixed conditional species-history scenario to the retained nuclear evidence. | entrypoint |
 | [inference/reestimate_panel.py](../scripts/research/nuclear_ils/inference/reestimate_panel.py) | Re-estimate gene trees from simulated alignments and summarize quartet outcomes. | linux_guarded_entrypoint |
 | [inference/test_artificial.py](../scripts/research/nuclear_ils/inference/test_artificial.py) | Test simulated-panel inference admission and parsing with synthetic inputs. | test |
 | [inference/vendor/engineering_parser.py](../scripts/research/nuclear_ils/inference/vendor/engineering_parser.py) | Parse IQ-TREE inference outputs and verify simulated-panel scientific invariants. | library |
@@ -176,8 +176,8 @@ Every analysis script below has a specific purpose. `historical_reference` means
 
 | Script | Purpose | Role |
 |---|---|---|
-| [historical/make_report_figures.py](../scripts/research/chloroplast_ils/historical/make_report_figures.py) | Plot conditional plastid topology and distance-scenario summaries. | historical_reference |
-| [historical/prepare_inputs.py](../scripts/research/chloroplast_ils/historical/prepare_inputs.py) | Prepare the frozen nuclear guide and observed chloroplast quartet/distance inputs. | historical_reference |
+| [historical/make_report_figures.py](../scripts/research/chloroplast_ils/historical/make_report_figures.py) | Plot conditional plastid topology and distance-scenario summaries. | entrypoint |
+| [historical/prepare_inputs.py](../scripts/research/chloroplast_ils/historical/prepare_inputs.py) | Prepare the frozen nuclear guide and observed chloroplast quartet/distance inputs. | entrypoint |
 | [simulate.py](../scripts/research/chloroplast_ils/simulate.py) | Simulate conditional plastid genealogies and JC69 distance scenarios. | entrypoint |
 | [validate.py](../scripts/research/chloroplast_ils/validate.py) | Validate simulated plastid topology frequencies and analytic distance probabilities. | entrypoint |
 
@@ -200,3 +200,18 @@ The [source map](../workflow/research/SOURCE_MAP.csv) records the origin, input/
 | [test_wgs_probe.py](../tests/test_wgs_probe.py) | Check wgs probe with small artificial inputs and failure cases. |
 | [dryrun.sh](../workflow/tests/dryrun.sh) | Plan population/assembly jobs and check frozen-directory refusal without executing analysis. |
 | [research_dryrun.py](../workflow/tests/research_dryrun.py) | Plan later-analysis jobs and check input/output contracts without executing analysis. |
+
+## Portability and dependency helpers
+
+| Script | Purpose |
+|---|---|
+| [research/chloroplast/historical/cp_tree_runner.py](../scripts/research/chloroplast/historical/cp_tree_runner.py) | Provide the preserved bounded IQ-TREE job implementation to the expanded historical driver. |
+| [research/chloroplast/historical/exec_verified_scope.py](../scripts/research/chloroplast/historical/exec_verified_scope.py) | Check actual cgroup memory, swap and CPU limits before replacing the guard process with the scientific command. |
+| [research/chloroplast/historical/expanded_entry.py](../scripts/research/chloroplast/historical/expanded_entry.py) | Prepare expanded plastome matrices with explicit relocation of paths inside immutable source receipts. |
+| [research/chloroplast/historical/freeze_contract.py](../scripts/research/chloroplast/historical/freeze_contract.py) | Create a hash-bound configuration/code manifest outside the fresh tree-output directory. |
+| [research/chloroplast/historical/portable_cli.py](../scripts/research/chloroplast/historical/portable_cli.py) | Validate chloroplast input/tool paths, fresh output directories and scheduler budgets without starting analysis. |
+| [research/chloroplast_ils/historical/portable_inputs.py](../scripts/research/chloroplast_ils/historical/portable_inputs.py) | Resolve configured inputs and immutable-receipt path mappings, verify metadata migration and preflight dependencies. |
+| [research/nuclear/historical/_nuclear_cli.py](../scripts/research/nuclear/historical/_nuclear_cli.py) | Resolve nuclear-stage paths and validate explicit file/tool and fresh-output contracts. |
+| [research/nuclear_ils/historical/portable_inputs.py](../scripts/research/nuclear_ils/historical/portable_inputs.py) | Resolve configured inputs and immutable-receipt path mappings, verify metadata migration and preflight dependencies. |
+| [research/panthaica/historical/portable_inputs.py](../scripts/research/panthaica/historical/portable_inputs.py) | Resolve configured inputs and immutable-receipt path mappings, verify metadata migration and preflight dependencies. |
+| [research/population/historical/_population_cli.py](../scripts/research/population/historical/_population_cli.py) | Load population-stage configuration, verify file/tool identities, and report read-only plans. |

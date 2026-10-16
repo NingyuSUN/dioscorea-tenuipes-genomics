@@ -1,0 +1,105 @@
+{
+  "out": "../../results_portable/chloroplast/run_expanded_trees",
+  "entry_config": "../../data/portable/chloroplast/run_expanded_trees/entry.json",
+  "sample_parent": "../../data/portable/chloroplast/run_expanded_trees/samples",
+  "frozen_manifest": "../../data/portable/chloroplast/run_expanded_trees/freeze.json",
+  "python": "../../tools/python3",
+  "loginctl": "../../tools/loginctl",
+  "tree_lock": "../../results_portable/locks/chloroplast_tree.lock",
+  "policy": {
+    "iqtree": "../../tools/iqtree2",
+    "iqtree_sha256": "a5a11554ca60b5682fd50af81301ea247c887d93a7d7014fcd61c0fced033832",
+    "threads": 4,
+    "cgroup_memory_max_bytes": 6442450944,
+    "cgroup_memory_swap_max_bytes": 0,
+    "sequential_panels": [
+      "main98",
+      "control95_without_new_tenuipes"
+    ],
+    "outgroups": [
+      "KX171420.1",
+      "NC_036658.1"
+    ],
+    "seed": 20260930,
+    "pilot_iterations": 10,
+    "pilot_total_budget_seconds": 300,
+    "full_bootstrap": 1000,
+    "full_alrt": 1000,
+    "full_bnni": true,
+    "full_stage_does_not_follow_pilot_automatically": true,
+    "model_file": "fixed_models.nex",
+    "minimum_free_disk_bytes": 2147483648,
+    "cpu_affinity_max_cpus": 4
+  },
+  "required_receipts": {
+    "recovery03": "../../data/portable/chloroplast/run_expanded_trees/recovery.json"
+  },
+  "fixed_model": {
+    "model_classes": "Three unmerged TVM+F+G4 partitions; LSC/IR/SSC",
+    "partition_treatment": "IQ-TREE -p, edge-linked proportional; branch lengths and numerical model parameters re-estimated per panel",
+    "fixed_model_file_sha256": "c6ccbe85a37c76bead22cd651334294d49b03989a6998408345e5c8d6fd3959b",
+    "fixed_model_file_remote": "../../data/portable/chloroplast/run_expanded_trees/fixed_models.nex",
+    "threads": 4,
+    "memory_max_bytes": 6442450944,
+    "memory_swap_max_bytes": 0,
+    "CPU_control": "Verified inherited OS affinity, not unsupported CPUQuota",
+    "outgroups": [
+      "KX171420.1",
+      "NC_036658.1"
+    ],
+    "seed": 20260930,
+    "formal_options": [
+      "-safe",
+      "-keep-ident",
+      "-B",
+      "1000",
+      "-alrt",
+      "1000",
+      "-bnni",
+      "--boot-trees"
+    ],
+    "no_automatic_tree_dispatch": true,
+    "historical_pilot_total_seconds": 300.073556,
+    "historical_scope_peak_bytes": 196878336,
+    "pilot_interpretation": "Both 150s timing runs terminated before complete inference; no bootstrap-time extrapolation; do not rerun unchanged pilot"
+  },
+  "resource_budget": {
+    "tree_memory_max_bytes": 6442450944,
+    "rna_coordinator_memory_max_bytes": 2147483648,
+    "rna_stage_max_bytes": 17179869184,
+    "combined_planned_caps_bytes": 25769803776,
+    "minimum_MemTotal_bytes": 32212254720,
+    "minimum_MemAvailable_bytes": 27917287424,
+    "tree_cpu_ids": [
+      4,
+      5,
+      6,
+      7
+    ],
+    "RNA_planned_cpu_ids": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "host_logical_cpus_planning_context": 36,
+    "resource_gate_once_before_entry": true,
+    "two_tree_planning_hours": [
+      2,
+      8
+    ],
+    "runtime_estimate_calibrated": false,
+    "external_tasks_or_future_memory_pressure_excluded": false,
+    "startup_headroom_bytes": 2147483648,
+    "anonymous_memory_credit_bytes": 0,
+    "MemAvailable_gate_formula": "tree6GiB + RNA coordinator2GiB + RNA future stage16GiB + headroom2GiB - anonymous credit0 =26GiB",
+    "memory_gate_limitations": "Startup check only, not an actual reservation. No deduction for current RNA memory.current or anonymous memory. May conservatively reject feasible overlap if RNA already occupies memory. External future loads remain unbounded by this check."
+  },
+  "latest_new_stage_start": "2026-10-01T00:00:00+00:00",
+  "path_map": {},
+  "_template_requirements": [
+    "Set latest_new_stage_start to the reviewed run deadline before execution.",
+    "Provide the complete entry configuration, source-profile receipts and program freeze; no source data are included.",
+    "CPU affinity and memory gates are explicit historical requirements; verify the configured host allocation."
+  ]
+}

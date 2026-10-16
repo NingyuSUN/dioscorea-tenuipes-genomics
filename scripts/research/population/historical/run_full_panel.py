@@ -9,10 +9,20 @@ os.environ['OMP_NUM_THREADS']='1'
 os.environ['OPENBLAS_NUM_THREADS']='1'
 import contextlib,csv,gzip,hashlib,importlib.util,io,json,re,sys,time,traceback
 from pathlib import Path
+import sys
+if not __debug__:
+    raise RuntimeError('Optimized Python disables required scientific assertions; run without -O.')
+_HELPER_DIR = str(Path(__file__).resolve().parent)
+if _HELPER_DIR not in sys.path:
+    sys.path.insert(0, _HELPER_DIR)
+import os
+# Bound native numerical libraries before importing them in the CLI process.
+for _thread_env in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'VECLIB_MAXIMUM_THREADS', 'BLIS_NUM_THREADS'):
+    os.environ[_thread_env] = '1'
 import numpy as np
 
 HERE=Path(__file__).resolve().parent
-REFERENCE=HERE.parents[1]/'dt_research_p5_20260924/explicit3_reference/explicit3.py'
+REFERENCE=HERE.parent/'explicit3.py'
 REFERENCE_SHA='e01d701ae77893533eb73025bd19834755d200a684b5961c4ece3bf6dcd4db55'
 COMPILED={'shared_cy':'b6839ac55c5d2c3813377daea7bd8ea939fe20be8589ad02dd54c5a6094a9c55','covariance_cy':'a0664e6bca8ed9174a841e9c96bebaf7f7e177f11b2ef5cdd0205b693fc5a41f'}
 SETTINGS={'selected_sites':37566,'samples':14,'panel_sites':37566,'ranks':[2,1,3],'primary_rank':2,'pca_max_iter':1000,'pca_tolerance':1e-5,'reference_em_max_iter':10000,'reference_em_tolerance':1e-10,'official_em_max_iter':1000,'official_em_tolerance':1e-5,'epsilon':1e-6,'epsilon_sensitivity':1e-4,'seed':20260924}
@@ -189,6 +199,7 @@ def describe_cov(c):
     return {'all_14_eigenvalues':values.tolist(),'diagonal':np.diag(c).tolist(),'all_finite':True,'max_asymmetry':symmetry,'minimum_eigenvalue':float(values[-1])},vectors
 
 PYTHON_SOURCES={'shared':'ea89ab7a0924d4611d2ecb93091361e1d770b256ce055701e45605252aa23b51','covariance':'abaf0c0e9538c73230299efece68faef128465815c5cd07d20f3f671d20dbf3e'}
+DEFAULT_MODULE_SHA256={**COMPILED,**PYTHON_SOURCES}
 REPRESENTATIONS=['B_HC_e1e6','C_PL','B_HC_e1e4','B_official_HC_e1e6']
 
 def array_sha(x):return hashlib.sha256(np.ascontiguousarray(x).tobytes()).hexdigest()
@@ -272,7 +283,7 @@ def final_status(arms):
     return 'COMPLETED_PENDING_ROOT_SCIENTIFIC_AUDIT' if complete else 'PARTIAL_PENDING_ROOT_SCIENTIFIC_AUDIT'
 
 def run(plan_path,out):
-    plan_path=Path(plan_path);out=Path(out);plan=json.loads(plan_path.read_bytes())
+    plan_path=Path(plan_path);out=Path(out);plan=load_execution_plan(plan_path)
     if plan['status']!='ROOT_APPROVED_FIXED_FULL_PANEL' or plan['settings']!=SETTINGS:raise ValueError('Plan not root-reviewed/fixed settings differ')
     if sha(__file__)!=plan['expected_runner_sha256']:raise ValueError('Reviewed runner changed')
     if sha(REFERENCE)!=REFERENCE_SHA or plan['expected_reference_sha256']!=REFERENCE_SHA:raise ValueError('Reference kernel changed')
@@ -337,6 +348,73 @@ def run(plan_path,out):
         dump(out/'RUN_RECEIPT.json',{k:v for k,v in state.items() if not k.startswith('_')})
     return 0 if state['status']=='COMPLETED_PENDING_ROOT_SCIENTIFIC_AUDIT' else 2
 
-if __name__=='__main__':
-    if len(sys.argv)!=3:raise SystemExit('Usage: run_full_panel.py ROOT_REVIEWED_PLAN.json NEW_PRIVATE_OUTPUT_DIRECTORY')
-    raise SystemExit(run(sys.argv[1],sys.argv[2]))
+
+def load_execution_plan(plan_path):
+    """Resolve declared artifact paths without rewriting their provenance fields."""
+    plan_path = Path(plan_path).resolve()
+    plan = json.loads(plan_path.read_text())
+    for item in plan['inputs'].values():
+        value = Path(item['path']).expanduser()
+        item['path'] = str((value if value.is_absolute() else plan_path.parent / value).resolve())
+    return plan
+
+
+def configure(config, base):
+    from _population_cli import path_value, require_file, fresh_output
+    global REFERENCE, COMPILED, PYTHON_SOURCES
+    REFERENCE = require_file(path_value(config, 'reference', base, HERE.parent / 'explicit3.py'))
+    declared = config.get('official_module_sha256', DEFAULT_MODULE_SHA256)
+    if set(declared) != {'shared', 'covariance', 'shared_cy', 'covariance_cy'}:
+        raise ValueError('All four PCAngsd module SHA256 values must be supplied together')
+    COMPILED = {k: declared[k] for k in ('shared_cy', 'covariance_cy')}
+    PYTHON_SOURCES = {k: declared[k] for k in ('shared', 'covariance')}
+    plan_path = require_file(path_value(config, 'plan', base))
+    plan = load_execution_plan(plan_path)
+    out = fresh_output(path_value(config, 'outdir', base), [plan_path, REFERENCE, *[Path(x['path']) for x in plan['inputs'].values()]])
+    return plan_path, plan, out
+
+
+def preflight(plan_path, plan, out):
+    from _population_cli import expected_hash, report_plan
+    if plan['status'] != 'ROOT_APPROVED_FIXED_FULL_PANEL' or plan['settings'] != SETTINGS:
+        raise ValueError('Plan is not reviewed or fixed scientific settings differ')
+    expected_hash(Path(__file__), plan['expected_runner_sha256'], 'reviewed runner')
+    expected_hash(REFERENCE, REFERENCE_SHA, 'frozen explicit-three-genotype reference')
+    if plan['expected_reference_sha256'] != REFERENCE_SHA:
+        raise ValueError('Plan reference identity differs')
+    required = {'markers', 'calls', 'baseline_mask', 'common_mask', 'source_header', 'extraction_receipt', 'bed', 'bim', 'fam'}
+    if not required <= set(plan['inputs']):
+        raise ValueError('Plan lacks required input bindings: ' + ', '.join(sorted(required - set(plan['inputs']))))
+    if len(plan.get('samples', [])) != 14 or len(set(plan['samples'])) != 14:
+        raise ValueError('Plan requires 14 unique samples in their frozen order')
+    binding_keys = {'header_sha256', 'VCF_path', 'historical_body_sha256', 'FAI_sha256', 'source_samples'}
+    if not binding_keys <= set(plan.get('source_binding', {})):
+        raise ValueError('Plan lacks source-identity fields')
+    check_inputs(plan)
+    from pcangsd import shared, covariance, shared_cy, covariance_cy
+    modules = dict(shared=shared, covariance=covariance, shared_cy=shared_cy, covariance_cy=covariance_cy)
+    for name, expected in {**COMPILED, **PYTHON_SOURCES}.items():
+        expected_hash(Path(modules[name].__file__), expected, 'PCAngsd ' + name)
+    declared_inputs = {'plan': plan_path, 'reference': REFERENCE, **{key: Path(item['path']) for key, item in plan['inputs'].items()}, **{'pcangsd_' + name: Path(module.__file__) for name, module in modules.items()}}
+    declared_outputs = {'receipt': out / 'RUN_RECEIPT.json', **{name: out / name for name in ['paired.bed', 'paired.bim', 'paired.fam']}, **{name + '_r' + str(rank): out / (name + '_r' + str(rank) + '.npz') for name, rank in arm_schedule()}}
+    return report_plan('run_full_panel.py', declared_inputs,
+                       declared_outputs,
+                       ['numpy', 'pcangsd'], fixed_settings=SETTINGS,
+                       note='Preflight verifies bindings only; full sample/site/likelihood checks run before fitting.')
+
+
+def plan(config_path):
+    """Return a read-only, JSON-compatible artifact and dependency plan."""
+    config_path=Path(config_path).resolve();config=json.loads(config_path.read_text());p,data,out=configure(config,config_path.parent);return preflight(p,data,out)
+
+
+def main(argv=None):
+    from _population_cli import read_config
+    config, base, execute = read_config(__doc__, argv)
+    plan_path, plan, out = configure(config, base)
+    print(json.dumps(preflight(plan_path, plan, out), indent=2))
+    return run(plan_path, out) if execute else 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

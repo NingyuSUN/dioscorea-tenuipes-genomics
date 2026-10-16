@@ -1,0 +1,12 @@
+{
+  "out": "../../results_portable/chloroplast/audit_hachi_nuclear_coverage",
+  "binding": "../../data/portable/chloroplast/audit_hachi_nuclear_coverage/binding.json",
+  "genome": "../../data/portable/chloroplast/audit_hachi_nuclear_coverage/genome.fa.gz",
+  "cp": "../../data/portable/chloroplast/audit_hachi_nuclear_coverage/cp.fa.gz",
+  "reads": [
+    "../../data/portable/chloroplast/audit_hachi_nuclear_coverage/R1.fq.gz",
+    "../../data/portable/chloroplast/audit_hachi_nuclear_coverage/R2.fq.gz"
+  ],
+  "minimap2": "../../tools/minimap2",
+  "samtools": "../../tools/samtools"
+}

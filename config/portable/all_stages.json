@@ -1,0 +1,809 @@
+{
+  "receipts": "../../results_portable/workflow_receipts/all_stages",
+  "frozen_dirs": [
+    "../../data/portable",
+    "../../tools"
+  ],
+  "stages": {
+    "population_full_panel": {
+      "script": "scripts/research/population/historical/run_full_panel.py",
+      "config": "population_full_panel.json",
+      "inputs": [
+        "../../data/portable/population_sources/full_panel_plan.json"
+      ],
+      "outputs": [
+        "../../results_portable/full_panel/RUN_RECEIPT.json",
+        "../../results_portable/full_panel/paired.bed",
+        "../../results_portable/full_panel/paired.bim",
+        "../../results_portable/full_panel/paired.fam",
+        "../../results_portable/full_panel/B_HC_e1e6_r2.npz",
+        "../../results_portable/full_panel/B_HC_e1e6_r1.npz",
+        "../../results_portable/full_panel/B_HC_e1e6_r3.npz",
+        "../../results_portable/full_panel/C_PL_r2.npz",
+        "../../results_portable/full_panel/C_PL_r1.npz",
+        "../../results_portable/full_panel/C_PL_r3.npz",
+        "../../results_portable/full_panel/B_HC_e1e4_r2.npz",
+        "../../results_portable/full_panel/B_HC_e1e4_r1.npz",
+        "../../results_portable/full_panel/B_HC_e1e4_r3.npz",
+        "../../results_portable/full_panel/B_official_HC_e1e6_r2.npz",
+        "../../results_portable/full_panel/B_official_HC_e1e6_r1.npz",
+        "../../results_portable/full_panel/B_official_HC_e1e6_r3.npz"
+      ],
+      "after": [],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [
+        "../../data/portable/population_sources",
+        "../../tools/pcangsd"
+      ],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/full_panel"
+      ]
+    },
+    "population_plink": {
+      "script": "scripts/research/population/historical/run_plink_arm.py",
+      "config": "population_plink.json",
+      "inputs": [
+        "../../results_portable/full_panel/RUN_RECEIPT.json",
+        "../../results_portable/full_panel/paired.bed",
+        "../../results_portable/full_panel/paired.bim",
+        "../../results_portable/full_panel/paired.fam"
+      ],
+      "outputs": [
+        "../../results_portable/plink/RECEIPT.json",
+        "../../results_portable/plink/pca.rel",
+        "../../results_portable/plink/pca.eigenvec",
+        "../../results_portable/plink/pca.eigenval",
+        "../../results_portable/plink/pca.log"
+      ],
+      "after": [
+        "population_full_panel"
+      ],
+      "threads": 2,
+      "tools": [
+        "../../tools/plink"
+      ],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/plink"
+      ]
+    },
+    "population_comparison": {
+      "script": "scripts/research/population/historical/compare_full_panel.py",
+      "config": "population_comparison.json",
+      "inputs": [
+        "../../results_portable/full_panel/RUN_RECEIPT.json",
+        "../../results_portable/plink/RECEIPT.json"
+      ],
+      "outputs": [
+        "../../results_portable/comparison/COMPARISON.json",
+        "../../results_portable/comparison/COMPARISONS.tsv",
+        "../../results_portable/comparison/COORDINATES.tsv",
+        "../../results_portable/comparison/EIGENVALUES.tsv"
+      ],
+      "after": [
+        "population_full_panel",
+        "population_plink"
+      ],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [
+        "../../results_portable/full_panel",
+        "../../results_portable/plink"
+      ],
+      "output_directories": [
+        "../../results_portable/comparison"
+      ]
+    },
+    "nuclear_recovery": {
+      "script": "scripts/research/nuclear/historical/recover_nuclear.py",
+      "config": "nuclear_recovery.json",
+      "inputs": [
+        "../../data/portable/read1.fastq.gz",
+        "../../data/portable/read2.fastq.gz",
+        "../../data/portable/download.json",
+        "../../data/portable/qc.json"
+      ],
+      "outputs": [
+        "../../results_portable/recovered/RUN_RECEIPT.json",
+        "../../results_portable/recovered/assembly/final.contigs.fa",
+        "../../results_portable/recovered/busco/Dioscorea_gracillima/run_embryophyta_odb10/full_table.tsv"
+      ],
+      "after": [],
+      "threads": 8,
+      "tools": [
+        "../../tools/megahit",
+        "../../tools/busco/bin/python",
+        "../../tools/busco/bin/busco"
+      ],
+      "input_directories": [
+        "../../data/portable/embryophyta_odb10",
+        "../../data/portable/busco_cache"
+      ],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/recovered"
+      ]
+    },
+    "nuclear_main": {
+      "script": "scripts/research/nuclear/historical/run_nuclear_main.py",
+      "config": "nuclear_main.json",
+      "inputs": [
+        "../../data/portable/taxa.json",
+        "../../data/portable/WT42.faa",
+        "../../data/portable/WT42_metadata.json"
+      ],
+      "outputs": [
+        "../../results_portable/nuclear/NUCLEAR_RUN.json",
+        "../../results_portable/nuclear/metadata/FINAL_NUCLEAR_PANEL.json",
+        "../../results_portable/nuclear/matrices/genome_main_no2661/main.faa",
+        "../../results_portable/nuclear/matrices/genome_main_no2661/summary.json",
+        "../../results_portable/nuclear/results/genome_main_no2661/main.treefile",
+        "../../results_portable/nuclear/results/genome_main_no2661/main.ufboot",
+        "../../results_portable/nuclear/metadata/INPUT_STAGING.json"
+      ],
+      "after": [],
+      "threads": 8,
+      "tools": [
+        "../../tools/busco/bin/python",
+        "../../tools/busco/bin/busco",
+        "../../tools/mafft",
+        "../../tools/iqtree2"
+      ],
+      "input_directories": [
+        "../../data/portable/busco_runs",
+        "../../data/portable/embryophyta_odb10",
+        "../../data/portable/busco_cache"
+      ],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/nuclear"
+      ]
+    },
+    "nuclear_loci": {
+      "script": "scripts/research/nuclear/historical/prepare_loci.py",
+      "config": "nuclear_loci.json",
+      "inputs": [
+        "../../results_portable/nuclear/matrices/genome_main_no2661/main.faa",
+        "../../results_portable/nuclear/matrices/genome_main_no2661/summary.json",
+        "../../results_portable/nuclear/results/genome_main_no2661/main.treefile"
+      ],
+      "outputs": [
+        "../../results_portable/loci/metadata/LOCUS_MANIFEST.json"
+      ],
+      "after": [
+        "nuclear_main"
+      ],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [
+        "../../results_portable/nuclear/matrices/genome_main_no2661"
+      ],
+      "output_directories": [
+        "../../results_portable/loci"
+      ],
+      "bind_fields": {
+        "reference_tree_sha256": "../../results_portable/nuclear/results/genome_main_no2661/main.treefile"
+      },
+      "path_fields": [
+        "matrix_dir",
+        "reference_tree",
+        "outdir"
+      ]
+    },
+    "nuclear_translation": {
+      "script": "scripts/research/nuclear/historical/genomic_cds_translation.py",
+      "config": "nuclear_translation.json",
+      "inputs": [
+        "../../data/portable/genome.fa",
+        "../../data/portable/alignments.gff",
+        "../../data/portable/historical_173.faa",
+        "../../data/portable/alignment_STATUS.json",
+        "../../data/portable/QUERY_MANIFEST.json"
+      ],
+      "outputs": [
+        "../../results_portable/cds_translation/STATUS.json",
+        "../../results_portable/cds_translation/CGROUP_OBSERVED.json",
+        "../../results_portable/cds_translation/CDS_TRANSLATION.json"
+      ],
+      "after": [],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/cds_translation"
+      ]
+    },
+    "cp_prepare_matrices": {
+      "script": "scripts/research/chloroplast/historical/prepare_inputs.py",
+      "config": "cp_prepare_matrices.json",
+      "inputs": [
+        "../../data/portable/chloroplast/prepare_inputs/source/plus_Kita94.fixed_columns.fa",
+        "../../data/portable/chloroplast/prepare_inputs/source/plus_Kita_Edo95.fixed_columns.fa",
+        "../../data/portable/chloroplast/prepare_inputs/source/fixed_regions.nex",
+        "../../data/portable/chloroplast/prepare_inputs/source/PREPARATION_RECEIPT.json",
+        "../../data/portable/chloroplast/prepare_inputs/p19/whole_plastome_singleIR.fa",
+        "../../data/portable/chloroplast/prepare_inputs/p19/main.best_scheme.nex",
+        "../../data/portable/chloroplast/prepare_inputs/p19/main.best_model.nex",
+        "../../data/portable/chloroplast/prepare_inputs/p19/main.log",
+        "../../data/portable/chloroplast/prepare_inputs/p19/main.treefile"
+      ],
+      "outputs": [
+        "../../results_portable/chloroplast/prepare_inputs/control93.fixed_columns.fa",
+        "../../results_portable/chloroplast/prepare_inputs/control94.fixed_columns.fa",
+        "../../results_portable/chloroplast/prepare_inputs/main95.fixed_columns.fa",
+        "../../results_portable/chloroplast/prepare_inputs/fixed_regions.nex",
+        "../../results_portable/chloroplast/prepare_inputs/fixed_models.nex",
+        "../../results_portable/chloroplast/prepare_inputs/SOURCE_PREPARATION_RECEIPT.json",
+        "../../results_portable/chloroplast/prepare_inputs/P19.main.log",
+        "../../results_portable/chloroplast/prepare_inputs/P19.main.best_model.nex",
+        "../../results_portable/chloroplast/prepare_inputs/P19.main.treefile",
+        "../../results_portable/chloroplast/prepare_inputs/CONFIG.json",
+        "../../results_portable/chloroplast/prepare_inputs/PREPARED.json"
+      ],
+      "after": [],
+      "threads": 1,
+      "tools": [
+        "../../tools/iqtree2"
+      ],
+      "input_directories": [
+        "../../data/portable/chloroplast/prepare_inputs"
+      ],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/chloroplast/prepare_inputs"
+      ]
+    },
+    "cp_prepare_source_au": {
+      "script": "scripts/research/chloroplast/historical/prepare_source_inputs.py",
+      "config": "cp_prepare_source_au.json",
+      "inputs": [
+        "../../data/portable/chloroplast/prepare_source_inputs/design/INPUT_METADATA.json",
+        "../../data/portable/chloroplast/prepare_source_inputs/design/DESIGN.json",
+        "../../data/portable/chloroplast/prepare_source_inputs/design/joint.partitions.nex",
+        "../../data/portable/chloroplast/prepare_source_inputs/design/HT_cherry.constraint.nwk",
+        "../../data/portable/chloroplast/prepare_source_inputs/design/CP_TGZ_split.constraint.nwk",
+        "../../data/portable/chloroplast/prepare_source_inputs/source/Kita_OQ_shared.control.fa",
+        "../../data/portable/chloroplast/prepare_source_inputs/source/Kita_OQ_shared.replacement.fa",
+        "../../data/portable/chloroplast/prepare_source_inputs/source/Kita_OQ_shared.columns.tsv",
+        "../../data/portable/chloroplast/prepare_source_inputs/history/candidates.nwk",
+        "../../data/portable/chloroplast/prepare_source_inputs/history/CANDIDATE_MANIFEST.json"
+      ],
+      "outputs": [
+        "../../results_portable/chloroplast/prepare_source_inputs/OQ_joint.fa",
+        "../../results_portable/chloroplast/prepare_source_inputs/Kita_joint.fa",
+        "../../results_portable/chloroplast/prepare_source_inputs/joint.partitions.nex",
+        "../../results_portable/chloroplast/prepare_source_inputs/HT_cherry.constraint.nwk",
+        "../../results_portable/chloroplast/prepare_source_inputs/CP_TGZ_split.constraint.nwk",
+        "../../results_portable/chloroplast/prepare_source_inputs/INPUT_METADATA.json",
+        "../../results_portable/chloroplast/prepare_source_inputs/DESIGN.json",
+        "../../results_portable/chloroplast/prepare_source_inputs/joint.columns.tsv",
+        "../../results_portable/chloroplast/prepare_source_inputs/historical.candidates.nwk",
+        "../../results_portable/chloroplast/prepare_source_inputs/historical.CANDIDATE_MANIFEST.json",
+        "../../results_portable/chloroplast/prepare_source_inputs/joint.blocks.json",
+        "../../results_portable/chloroplast/prepare_source_inputs/CONFIG.json",
+        "../../results_portable/chloroplast/prepare_source_inputs/PREPARED.json"
+      ],
+      "after": [],
+      "threads": 1,
+      "tools": [
+        "../../tools/iqtree2"
+      ],
+      "input_directories": [
+        "../../data/portable/chloroplast/prepare_source_inputs"
+      ],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/chloroplast/prepare_source_inputs"
+      ]
+    },
+    "cp_hachi_coverage": {
+      "script": "scripts/research/chloroplast/historical/audit_hachi_nuclear_coverage.py",
+      "config": "cp_hachi_coverage.json",
+      "inputs": [
+        "../../data/portable/chloroplast/audit_hachi_nuclear_coverage/binding.json",
+        "../../data/portable/chloroplast/audit_hachi_nuclear_coverage/genome.fa.gz",
+        "../../data/portable/chloroplast/audit_hachi_nuclear_coverage/cp.fa.gz",
+        "../../data/portable/chloroplast/audit_hachi_nuclear_coverage/R1.fq.gz",
+        "../../data/portable/chloroplast/audit_hachi_nuclear_coverage/R2.fq.gz"
+      ],
+      "outputs": [
+        "../../results_portable/chloroplast/audit_hachi_nuclear_coverage/COVERAGE_RECEIPT.json",
+        "../../results_portable/chloroplast/audit_hachi_nuclear_coverage/STATUS.json",
+        "../../results_portable/chloroplast/audit_hachi_nuclear_coverage/CDS_TEMPLATE_DEPTH.tsv",
+        "../../results_portable/chloroplast/audit_hachi_nuclear_coverage/Kita2022_nuclear_plus_CP.fa",
+        "../../results_portable/chloroplast/audit_hachi_nuclear_coverage/Kita2022_nuclear_plus_CP.fa.fai",
+        "../../results_portable/chloroplast/audit_hachi_nuclear_coverage/Hachi1.first1M.Kita2022.bam",
+        "../../results_portable/chloroplast/audit_hachi_nuclear_coverage/Hachi1.first1M.Kita2022.bam.bai"
+      ],
+      "after": [],
+      "threads": 8,
+      "tools": [
+        "../../tools/minimap2",
+        "../../tools/samtools"
+      ],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/chloroplast/audit_hachi_nuclear_coverage"
+      ]
+    },
+    "cp_edo_comparison": {
+      "script": "scripts/research/chloroplast/historical/compare_published_edo.py",
+      "config": "cp_edo_comparison.json",
+      "inputs": [
+        "../../data/portable/chloroplast/compare_published_edo/published.gt.gz",
+        "../../data/portable/chloroplast/compare_published_edo/cp.fa"
+      ],
+      "outputs": [
+        "../../results_portable/chloroplast/compare_published_edo/NUCLEAR_PAIRWISE.json",
+        "../../results_portable/chloroplast/compare_published_edo/CP_PAIRWISE.json",
+        "../../results_portable/chloroplast/compare_published_edo/DIAGNOSTIC_STATE_COUNTS.json",
+        "../../results_portable/chloroplast/compare_published_edo/NUCLEAR_PAIRWISE.tsv",
+        "../../results_portable/chloroplast/compare_published_edo/CP_PAIRWISE.tsv",
+        "../../results_portable/chloroplast/compare_published_edo/RECEIPT.json"
+      ],
+      "after": [],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/chloroplast/compare_published_edo"
+      ]
+    },
+    "cp_edo_controls": {
+      "script": "scripts/research/chloroplast/historical/published_edo_controls.py",
+      "config": "cp_edo_controls.json",
+      "inputs": [
+        "../../data/portable/chloroplast/compare_published_edo/published.gt.gz",
+        "../../results_portable/chloroplast/compare_published_edo/RECEIPT.json"
+      ],
+      "outputs": [
+        "../../results_portable/chloroplast/published_edo_controls/ALL_SAMPLE_STATES.json",
+        "../../results_portable/chloroplast/published_edo_controls/LEAVE_ONE_COMPARATOR_OUT.json",
+        "../../results_portable/chloroplast/published_edo_controls/RECEIPT.json"
+      ],
+      "after": [
+        "cp_edo_comparison"
+      ],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/chloroplast/published_edo_controls"
+      ]
+    },
+    "cp_denovo_readback": {
+      "script": "scripts/research/chloroplast/historical/validate_denovo_cp_reads.py",
+      "config": "cp_denovo_readback.json",
+      "inputs": [
+        "../../data/portable/chloroplast/validate_denovo_cp_reads/contigs.fa",
+        "../../data/portable/chloroplast/validate_denovo_cp_reads/assembly.json",
+        "../../data/portable/chloroplast/validate_denovo_cp_reads/screen.json",
+        "../../data/portable/chloroplast/validate_denovo_cp_reads/R1.fq.gz",
+        "../../data/portable/chloroplast/validate_denovo_cp_reads/R2.fq.gz"
+      ],
+      "outputs": [
+        "../../results_portable/chloroplast/validate_denovo_cp_reads/STATUS.json",
+        "../../results_portable/chloroplast/validate_denovo_cp_reads/FROZEN_PARAMETERS.json",
+        "../../results_portable/chloroplast/validate_denovo_cp_reads/MAPPING_COMMANDS.json",
+        "../../results_portable/chloroplast/validate_denovo_cp_reads/all_contigs.bam",
+        "../../results_portable/chloroplast/validate_denovo_cp_reads/all_contigs.bam.bai",
+        "../../results_portable/chloroplast/validate_denovo_cp_reads/ctg1.per_base.tsv",
+        "../../results_portable/chloroplast/validate_denovo_cp_reads/ctg1.validated.fa",
+        "../../results_portable/chloroplast/validate_denovo_cp_reads/ctg1.metrics.json"
+      ],
+      "after": [],
+      "threads": 8,
+      "tools": [
+        "../../tools/minimap2",
+        "../../tools/samtools"
+      ],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/chloroplast/validate_denovo_cp_reads"
+      ]
+    },
+    "cp_expanded_trees": {
+      "script": "scripts/research/chloroplast/historical/run_expanded_trees.py",
+      "config": "cp_expanded_trees.json",
+      "inputs": [
+        "../../data/portable/chloroplast/run_expanded_trees/entry.json",
+        "../../data/portable/chloroplast/run_expanded_trees/fixed_models.nex",
+        "../../data/portable/chloroplast/run_expanded_trees/freeze.json",
+        "../../data/portable/chloroplast/run_expanded_trees/recovery.json"
+      ],
+      "outputs": [
+        "../../results_portable/chloroplast/run_expanded_trees/RUN_STATUS.json",
+        "../../results_portable/chloroplast/run_expanded_trees/RESOURCE_BUDGET.json",
+        "../../results_portable/chloroplast/run_expanded_trees/FULL_RESULTS.tar.gz",
+        "../../results_portable/chloroplast/run_expanded_trees/COLLECTION_RECEIPT.json",
+        "../../results_portable/chloroplast/run_expanded_trees/ALL_OUTPUT_FILES.json",
+        "../../results_portable/chloroplast/run_expanded_trees/matrices/ENTRY_RECEIPT.json",
+        "../../results_portable/chloroplast/run_expanded_trees/matrices/main98.fixed_columns.fa",
+        "../../results_portable/chloroplast/run_expanded_trees/matrices/control95_without_new_tenuipes.fixed_columns.fa",
+        "../../results_portable/chloroplast/run_expanded_trees/matrices/control97_without_Hachi.fixed_columns.fa",
+        "../../results_portable/chloroplast/run_expanded_trees/matrices/fixed_regions.nex",
+        "../../results_portable/chloroplast/run_expanded_trees/matrices/fixed_models.nex",
+        "../../results_portable/chloroplast/run_expanded_trees/trees/main98/main.treefile",
+        "../../results_portable/chloroplast/run_expanded_trees/trees/control95_without_new_tenuipes/main.treefile"
+      ],
+      "after": [],
+      "threads": 4,
+      "tools": [
+        "../../tools/python3",
+        "../../tools/loginctl",
+        "../../tools/iqtree2"
+      ],
+      "input_directories": [
+        "../../data/portable/chloroplast/run_expanded_trees"
+      ],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/chloroplast/run_expanded_trees"
+      ]
+    },
+    "cp97_tree": {
+      "script": "scripts/research/chloroplast/historical/run_cp97.py",
+      "config": "cp97_tree.json",
+      "inputs": [
+        "../../data/portable/chloroplast/run_cp97/main98.fixed_columns.fa",
+        "../../data/portable/chloroplast/run_cp97/control97_without_Hachi.fixed_columns.fa",
+        "../../data/portable/chloroplast/run_cp97/fixed_models.nex",
+        "../../data/portable/chloroplast/run_cp97/RUNTIME.json",
+        "../../data/portable/chloroplast/run_cp97/main.treefile",
+        "../../data/portable/chloroplast/run_cp97/ENTRY_RECEIPT.json",
+        "../../data/portable/chloroplast/run_cp97/freeze.json",
+        "../../data/portable/chloroplast/run_cp97/main.log"
+      ],
+      "outputs": [
+        "../../results_portable/chloroplast/run_cp97/DISPATCH.json",
+        "../../results_portable/chloroplast/run_cp97/OUTPUT_MANIFEST.json",
+        "../../results_portable/chloroplast/run_cp97/control/EXIT_RECEIPT.json",
+        "../../results_portable/chloroplast/run_cp97/control/TREE_EXIT.json",
+        "../../results_portable/chloroplast/run_cp97/tree97/main.treefile",
+        "../../results_portable/chloroplast/run_cp97/tree97/main.contree",
+        "../../results_portable/chloroplast/run_cp97/tree97/main.iqtree",
+        "../../results_portable/chloroplast/run_cp97/tree97/main.log",
+        "../../results_portable/chloroplast/run_cp97/tree97/main.ufboot",
+        "../../results_portable/chloroplast/run_cp97/tree97/main.best_model.nex"
+      ],
+      "after": [],
+      "threads": 4,
+      "tools": [
+        "../../tools/python3",
+        "../../tools/systemd-run",
+        "../../tools/systemctl",
+        "../../tools/taskset",
+        "../../tools/timeout",
+        "../../tools/iqtree2"
+      ],
+      "input_directories": [
+        "../../data/portable/chloroplast/run_cp97"
+      ],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/chloroplast/run_cp97"
+      ]
+    },
+    "panthaica_rna_qc": {
+      "script": "scripts/research/panthaica/historical/run_rna_pipeline_draft.py",
+      "config": "panthaica_rna_qc.json",
+      "inputs": [
+        "metadata/RNA_QC_CONFIG.json",
+        "../../data/portable/panthaica/DOWNLOAD_RECEIPT.json",
+        "metadata/METADATA_MIGRATION.json",
+        "../../data/portable/panthaica/raw/CRR515167_f1.fq.gz",
+        "../../data/portable/panthaica/raw/CRR515167_r2.fq.gz"
+      ],
+      "outputs": [
+        "../../results_portable/panthaica/qc/qc_configured/QC_RECEIPT.json",
+        "../../results_portable/panthaica/qc/qc_configured/STATUS.json"
+      ],
+      "after": [],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/panthaica/qc/qc_configured"
+      ]
+    },
+    "panthaica_marker": {
+      "script": "scripts/research/panthaica/historical/run_marker_recovery_draft.py",
+      "config": "panthaica_marker.json",
+      "inputs": [
+        "metadata/MARKER_READINESS_EVIDENCE.json",
+        "../../results_portable/panthaica/assembly/full_configured/rnaspades/transcripts.fasta",
+        "../../results_portable/panthaica/assembly/full_configured/ASSEMBLY_RECEIPT.json",
+        "../../data/portable/panthaica/DOWNLOAD_RECEIPT.json",
+        "metadata/METADATA_MIGRATION.json"
+      ],
+      "outputs": [
+        "../../results_portable/panthaica/marker_recovery_configured/MARKER_RECOVERY_RECEIPT.json",
+        "../../results_portable/panthaica/marker_recovery_configured/CANDIDATE_RECEIPT.json",
+        "../../results_portable/panthaica/marker_recovery_configured/STATUS.json"
+      ],
+      "after": [
+        "panthaica_rna_full"
+      ],
+      "threads": 4,
+      "tools": [
+        "../../tools/busco/bin/busco",
+        "../../tools/busco/bin/python",
+        "../../tools/busco/bin/metaeuk",
+        "../../tools/systemd-run",
+        "../../tools/systemctl",
+        "../../tools/time"
+      ],
+      "input_directories": [
+        "../../data/portable/panthaica",
+        "../../data/portable",
+        "../../tools/busco"
+      ],
+      "generated_input_directories": [
+        "../../results_portable/panthaica/assembly/full_configured"
+      ],
+      "output_directories": [
+        "../../results_portable/panthaica/marker_recovery_configured"
+      ],
+      "bind_inputs": {
+        "transcripts": "../../results_portable/panthaica/assembly/full_configured/rnaspades/transcripts.fasta",
+        "assembly_receipt": "../../results_portable/panthaica/assembly/full_configured/ASSEMBLY_RECEIPT.json"
+      }
+    },
+    "panthaica_alignment": {
+      "script": "scripts/research/panthaica/historical/prepare_alignment_controls.py",
+      "config": "panthaica_alignment.json",
+      "inputs": [
+        "../../data/portable/panthaica/ALIGNMENT_CONTROL_EVIDENCE.json",
+        "metadata/MARKER_READINESS_EVIDENCE.json",
+        "../../results_portable/panthaica/marker_recovery_configured/MARKER_RECOVERY_RECEIPT.json",
+        "metadata/METADATA_MIGRATION.json"
+      ],
+      "outputs": [
+        "../../results_portable/panthaica/alignment_controls_configured/ALIGNMENT_CONTROL_RECEIPT.json",
+        "../../results_portable/panthaica/alignment_controls_configured/ALIGNMENT_AUDIT.json",
+        "../../results_portable/panthaica/alignment_controls_configured/fixed173_without_panthaica.faa",
+        "../../results_portable/panthaica/alignment_controls_configured/fixed173_with_panthaica.faa",
+        "../../results_portable/panthaica/alignment_controls_configured/partitions_fixed173.json",
+        "../../results_portable/panthaica/alignment_controls_configured/partitions_matchedL.json",
+        "../../results_portable/panthaica/alignment_controls_configured/matchedL_column_map.tsv"
+      ],
+      "after": [
+        "panthaica_marker"
+      ],
+      "threads": 1,
+      "tools": [
+        "../../tools/mafft"
+      ],
+      "input_directories": [
+        "../../data/portable/panthaica",
+        "../../data/portable",
+        "../../tools/busco"
+      ],
+      "generated_input_directories": [
+        "../../results_portable/panthaica/marker_recovery_configured"
+      ],
+      "output_directories": [
+        "../../results_portable/panthaica/alignment_controls_configured"
+      ],
+      "bind_inputs": {
+        "marker_receipt": "../../results_portable/panthaica/marker_recovery_configured/MARKER_RECOVERY_RECEIPT.json"
+      }
+    },
+    "nuclear_fit": {
+      "script": "scripts/research/nuclear_ils/historical/fit_history.py",
+      "config": "nuclear_fit.json",
+      "inputs": [
+        "../../data/portable/nuclear_ils/FIT_CONTRACT.json",
+        "../../data/portable/nuclear_ils/snapshot_manifest.json",
+        "../../data/portable/nuclear_ils/locus_manifest.json",
+        "../../data/portable/nuclear_ils/model_table.tsv",
+        "../../data/portable/nuclear_ils/FIT_SCOPE_RECEIPT.json"
+      ],
+      "outputs": [
+        "../../results_portable/nuclear_ils/fitted/SOURCE_BINDINGS.json",
+        "../../results_portable/nuclear_ils/fitted/NUMERICAL_RULES.json",
+        "../../results_portable/nuclear_ils/fitted/FIXED_SPECIES_TOPOLOGY.nwk",
+        "../../results_portable/nuclear_ils/fitted/QUARTET_GENE_AUDIT.json",
+        "../../results_portable/nuclear_ils/fitted/QUARTET_COUNTS.json",
+        "../../results_portable/nuclear_ils/fitted/PER_GENE_QUARTETS.tsv.gz",
+        "../../results_portable/nuclear_ils/fitted/CLOCK_PROFILE.json",
+        "../../results_portable/nuclear_ils/fitted/CLOCK_PAIR_RESIDUALS.tsv",
+        "../../results_portable/nuclear_ils/fitted/CLOCK_MISFIT.json",
+        "../../results_portable/nuclear_ils/fitted/S0_FITTED.json",
+        "../../results_portable/nuclear_ils/fitted/RECEIPT.json"
+      ],
+      "after": [],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [
+        "../../data/portable/nuclear_ils"
+      ],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/nuclear_ils/fitted"
+      ]
+    },
+    "nuclear_audit": {
+      "script": "scripts/research/nuclear_ils/historical/audit_panel.py",
+      "config": "nuclear_audit.json",
+      "inputs": [
+        "../../data/portable/nuclear_ils/AUDIT_CONTRACT.json",
+        "../../data/portable/nuclear_ils/original_audit_panel.py",
+        "../../data/portable/nuclear_ils/SUPPORT_DEFINITION_AUDIT.json",
+        "../../tools/iqtree2",
+        "../../data/portable/nuclear_ils/AUDIT_SCOPE_RECEIPT.json",
+        "../../data/portable/nuclear_ils/panel/control/CHAIN_EXIT.json",
+        "../../data/portable/nuclear_ils/panel/inference/EXIT_RECEIPT.json",
+        "../../data/portable/nuclear_ils/panel/inference_results/STATE.json",
+        "../../data/portable/nuclear_ils/panel/generation/INFERENCE_JOBS.json",
+        "../../data/portable/nuclear_ils/panel/generation/GENERATION_OUTPUT_SEAL.json",
+        "../../data/portable/nuclear_ils/panel/generation/PANEL_INPUT_FREEZE.json",
+        "../../data/portable/nuclear_ils/panel/inference/PROGRAM_FREEZE.json",
+        "../../data/portable/nuclear_ils/panel/inference_results/OUTPUT_MANIFEST.json",
+        "../../data/portable/nuclear_ils/panel/inference_results/PANEL_RESULTS.json",
+        "../../data/portable/nuclear_ils/panel/inference_results/INPUT_BINDING.json"
+      ],
+      "outputs": [
+        "../../results_portable/nuclear_ils/audit/RESULT.json",
+        "../../results_portable/nuclear_ils/audit/MODEL_AND_EDGE_DETAILS.json",
+        "../../results_portable/nuclear_ils/audit/WARNINGS.json",
+        "../../results_portable/nuclear_ils/audit/PER_GENE.tsv",
+        "../../results_portable/nuclear_ils/audit/OUTPUT_SEAL.json"
+      ],
+      "after": [],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [
+        "../../data/portable/nuclear_ils"
+      ],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/nuclear_ils/audit"
+      ]
+    },
+    "chloroplast_prepare": {
+      "script": "scripts/research/chloroplast_ils/historical/prepare_inputs.py",
+      "config": "chloroplast_prepare.json",
+      "inputs": [
+        "../../data/portable/chloroplast_ils/source_alignment.fa",
+        "../../data/portable/chloroplast_ils/cp98_tree.nwk",
+        "../../data/portable/chloroplast_ils/cp97_tree.nwk",
+        "../../results_portable/nuclear_ils/fitted/S0_FITTED.json"
+      ],
+      "outputs": [
+        "../../results_portable/chloroplast_ils/inputs/hime2_hachi_joint_acgt.fa",
+        "../../results_portable/chloroplast_ils/inputs/joint_acgt_columns_1based.txt",
+        "../../results_portable/chloroplast_ils/inputs/cp98_tree.nwk",
+        "../../results_portable/chloroplast_ils/inputs/cp97_tree.nwk",
+        "../../results_portable/chloroplast_ils/inputs/guide.json",
+        "../../results_portable/chloroplast_ils/inputs/observed.json",
+        "../../results_portable/chloroplast_ils/inputs/SOURCE_BINDINGS.json"
+      ],
+      "after": [
+        "nuclear_fit"
+      ],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/chloroplast_ils/inputs"
+      ],
+      "bind_inputs": {
+        "nuclear_S0": "../../results_portable/nuclear_ils/fitted/S0_FITTED.json"
+      }
+    },
+    "chloroplast_figures": {
+      "script": "scripts/research/chloroplast_ils/historical/make_report_figures.py",
+      "config": "chloroplast_figures.json",
+      "inputs": [
+        "../../data/portable/chloroplast_ils/validated/distance_grid_validated.csv",
+        "../../data/portable/chloroplast_ils/validated/topology_counts.csv"
+      ],
+      "outputs": [
+        "../../results_portable/chloroplast_ils/results/figures/distance_compatibility.png",
+        "../../results_portable/chloroplast_ils/results/figures/distance_compatibility.pdf",
+        "../../results_portable/chloroplast_ils/results/figures/genealogy_frequencies.png",
+        "../../results_portable/chloroplast_ils/results/figures/genealogy_frequencies.pdf"
+      ],
+      "after": [],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/chloroplast_ils/results/figures"
+      ]
+    },
+    "panthaica_rna_pilot": {
+      "script": "scripts/research/panthaica/historical/run_rna_pipeline_draft.py",
+      "config": "panthaica_rna_pilot.json",
+      "inputs": [
+        "metadata/RNA_QC_CONFIG.json",
+        "../../data/portable/panthaica/DOWNLOAD_RECEIPT.json",
+        "../../results_portable/panthaica/qc/qc_configured/QC_RECEIPT.json",
+        "../../data/portable/panthaica/RNASPADES_INSTALL_RECEIPT.json",
+        "metadata/METADATA_MIGRATION.json",
+        "../../data/portable/panthaica/raw/CRR515167_f1.fq.gz",
+        "../../data/portable/panthaica/raw/CRR515167_r2.fq.gz"
+      ],
+      "outputs": [
+        "../../results_portable/panthaica/assembly/pilot_configured/PILOT_RECEIPT.json",
+        "../../results_portable/panthaica/assembly/pilot_configured/STATUS.json",
+        "../../results_portable/panthaica/assembly/pilot_configured/rnaspades/transcripts.fasta"
+      ],
+      "after": [
+        "panthaica_rna_qc"
+      ],
+      "threads": 4,
+      "tools": [
+        "../../tools/cutadapt",
+        "../../tools/rnaspades.py",
+        "../../tools/python3",
+        "../../tools/systemd-run",
+        "../../tools/systemctl",
+        "../../tools/time"
+      ],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/panthaica/assembly/pilot_configured"
+      ],
+      "bind_inputs": {
+        "qc_receipt": "../../results_portable/panthaica/qc/qc_configured/QC_RECEIPT.json"
+      }
+    },
+    "panthaica_rna_full": {
+      "script": "scripts/research/panthaica/historical/run_rna_pipeline_draft.py",
+      "config": "panthaica_rna_full.json",
+      "inputs": [
+        "metadata/RNA_QC_CONFIG.json",
+        "../../data/portable/panthaica/DOWNLOAD_RECEIPT.json",
+        "../../results_portable/panthaica/qc/qc_configured/QC_RECEIPT.json",
+        "../../data/portable/panthaica/RNASPADES_INSTALL_RECEIPT.json",
+        "../../results_portable/panthaica/assembly/pilot_configured/PILOT_RECEIPT.json",
+        "metadata/METADATA_MIGRATION.json",
+        "../../data/portable/panthaica/raw/CRR515167_f1.fq.gz",
+        "../../data/portable/panthaica/raw/CRR515167_r2.fq.gz"
+      ],
+      "outputs": [
+        "../../results_portable/panthaica/assembly/full_configured/ASSEMBLY_RECEIPT.json",
+        "../../results_portable/panthaica/assembly/full_configured/STATUS.json",
+        "../../results_portable/panthaica/assembly/full_configured/rnaspades/transcripts.fasta"
+      ],
+      "after": [
+        "panthaica_rna_qc",
+        "panthaica_rna_pilot"
+      ],
+      "threads": 4,
+      "tools": [
+        "../../tools/cutadapt",
+        "../../tools/rnaspades.py",
+        "../../tools/python3",
+        "../../tools/systemd-run",
+        "../../tools/systemctl",
+        "../../tools/time"
+      ],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/panthaica/assembly/full_configured"
+      ],
+      "bind_inputs": {
+        "qc_receipt": "../../results_portable/panthaica/qc/qc_configured/QC_RECEIPT.json",
+        "pilot_receipt": "../../results_portable/panthaica/assembly/pilot_configured/PILOT_RECEIPT.json"
+      }
+    }
+  }
+}

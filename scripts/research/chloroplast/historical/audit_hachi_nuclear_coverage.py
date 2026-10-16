@@ -14,13 +14,7 @@ import socket
 import subprocess
 import time
 
-ROOT = Path('workspace/wgs/dt_research_p57_20260930')
-OUT = ROOT / 'nuclear_coverage_1m'
-MM = 'workspace/miniconda3/envs/ragtag/bin/minimap2'
-SAM = 'workspace/miniconda3/envs/busco/bin/samtools'
-BINDING = ROOT / 'workflow/TOKORO_173_PROTEIN_CDS_BINDING.json'
-CP = ROOT / 'workflow/author_D.tokoro.chloroplast_genome.v1.0.fasta.gz'
-READS = [ROOT / 'pilot_1m_qualityonly' / ('clean_R%d.fastq.gz' % i) for i in (1, 2)]
+import portable_cli as portable
 READ_HASHES = ['c7a1b8d568f4b46144f334cb30ba35e272f2d3b9cb2b760fe8d3c96d9a8c63ce',
                '812047cd5b64c383a9a63b1ae6dc08c78567fdf11234f7451104438454194e76']
 
@@ -40,18 +34,29 @@ def collapse(observations):
     return sum(len(v) == 1 and next(iter(v)) in 'ACGT' for v in by_template.values())
 
 
+def configure(config_path):
+    c=portable.configure(config_path, ('binding','genome','cp','minimap2','samtools','out'),('reads',))
+    if len(c['reads'])!=2: raise ValueError('Exactly two ordered read mates are required')
+    return c
+
+def plan(config_path):
+    c=configure(config_path)
+    inputs={k:c[k] for k in ('binding','genome','cp')};inputs.update(read1=c['reads'][0],read2=c['reads'][1],script=Path(__file__))
+    names=['COVERAGE_RECEIPT.json','STATUS.json','CDS_TEMPLATE_DEPTH.tsv','Kita2022_nuclear_plus_CP.fa',
+           'Kita2022_nuclear_plus_CP.fa.fai','Hachi1.first1M.Kita2022.bam','Hachi1.first1M.Kita2022.bam.bai']
+    return portable.contract(c['_config'],inputs,{n:c['out']/n for n in names},
+                             {k:c[k] for k in ('minimap2','samtools')},c['out'],markers=143,required_threads=8)
+
 def main():
-    a = argparse.ArgumentParser()
-    a.add_argument('--execute', action='store_true')
-    args = a.parse_args()
-    if not args.execute:
-        print('PREPARED: first1M-pair coverage only; no genotype or haplotype creation')
-        return
-    assert socket.gethostname() == 'compute-host-1ccbf7da4d'
+    a=portable.parser(__doc__).parse_args();checked=portable.preflight(plan(a.config))
+    if not a.execute: portable.emit(checked); return
+    c=configure(a.config);OUT=c['out'];ROOT=OUT.parent;BINDING=c['binding'];CP=c['cp'];READS=c['reads'];MM=str(c['minimap2']);SAM=str(c['samtools'])
+    if c.get('required_hostname') and socket.gethostname()!=c['required_hostname']:
+        raise ValueError('Execution hostname differs from the configured resource contract')
     assert not OUT.exists(), 'Inspect existing run; no overwrite or automatic restart'
-    assert shutil.disk_usage(ROOT).free > 8 * 1024**3
+    assert shutil.disk_usage(portable.existing_parent(ROOT)).free > 8 * 1024**3
     resource.setrlimit(resource.RLIMIT_AS, (8 * 1024**3,) * 2)
-    OUT.mkdir()
+    OUT.mkdir(parents=True,exist_ok=False)
     start = time.monotonic()
     state = dict(status='RUNNING', stage='VERIFY_INPUTS', pid=os.getpid(),
                  proc_start_ticks=Path('/proc/self/stat').read_text().split()[21],
@@ -81,7 +86,7 @@ def main():
     save()
     try:
         d = json.loads(BINDING.read_text())
-        genome = Path(d['sources']['source_genome'])
+        genome = c['genome']  # Relocation preserves the independently checked source genome digest.
         assert sha(genome) == d['sources']['source_genome_sha256']
         for p, expected in zip(READS, READ_HASHES): assert sha(p) == expected
         assert sha(CP) == '1870fe09da36eee2c3048cd52d0aa28f50b788016c151c15e969eb852e454485'

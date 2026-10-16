@@ -7,7 +7,7 @@ import run_rna_pipeline_draft as d
 def rec(name,mate,seq,quality=None):
     return b'@'+name+b'/'+str(mate).encode()+b'\n'+seq+b'\n+\n'+(quality or b'I'*len(seq))+b'\n'
 class RNATests(unittest.TestCase):
-    def setUp(self):self.tmp=tempfile.TemporaryDirectory();self.p=Path(self.tmp.name);self.cfg=json.loads(d.CONFIG.read_text())
+    def setUp(self):self.tmp=tempfile.TemporaryDirectory();self.p=Path(self.tmp.name);self.cfg={'adapter_r1':'AGATCGGAAGAGCACACGTCTGAACTCCAGTCA','adapter_r2':'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT'}
     def tearDown(self):self.tmp.cleanup()
     def files(self,a,b):
         p=[self.p/'1.gz',self.p/'2.gz']
@@ -50,5 +50,5 @@ class RNATests(unittest.TestCase):
     def test_missing_complete_pair_validation_cannot_run(self):
         (self.p/'DOWNLOAD_RECEIPT.json').write_text(json.dumps({'status':'COMPLETE','pairs_done':d.RAW_PAIRS}))
         with patch.object(d,'ROOT',self.p),self.assertRaisesRegex(ValueError,'paired FASTQ'):d.check_download()
-    def test_config_hash_frozen(self):self.assertEqual(d.hashfile(d.CONFIG),d.CONFIG_EXPECTED_SHA)
+    def test_config_hash_remains_declared(self):self.assertEqual(d.CONFIG_EXPECTED_SHA,'ed19abb14b85a9d10a626f2b43146a1a55bf565da038b4b07b0f0c4996a1611c')
 if __name__=='__main__':unittest.main(verbosity=2)

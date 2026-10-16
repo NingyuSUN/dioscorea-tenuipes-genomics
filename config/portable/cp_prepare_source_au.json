@@ -1,0 +1,7 @@
+{
+  "out": "../../results_portable/chloroplast/prepare_source_inputs",
+  "design_dir": "../../data/portable/chloroplast/prepare_source_inputs/design",
+  "source_dir": "../../data/portable/chloroplast/prepare_source_inputs/source",
+  "historical_dir": "../../data/portable/chloroplast/prepare_source_inputs/history",
+  "iqtree": "../../tools/iqtree2"
+}

@@ -1,0 +1,30 @@
+{
+  "paths": {
+    "output_dir": "../../results_portable/chloroplast_ils"
+  },
+  "inputs": {
+    "source_alignment": {
+      "path": "../../data/portable/chloroplast_ils/source_alignment.fa",
+      "sha256": "72a7839d0a41d124a4d02e119941b0f7464c92f43ce205914a257bd9a7dd8852"
+    },
+    "cp98_tree": {
+      "path": "../../data/portable/chloroplast_ils/cp98_tree.nwk",
+      "sha256": "4b0352705d1dfdecf5e166995658610b7d3924344465cd4247a14374c78c25dc"
+    },
+    "cp97_tree": {
+      "path": "../../data/portable/chloroplast_ils/cp97_tree.nwk",
+      "sha256": "8504215ab28c68ad6e0ce58e51d64c9f52107e556571e8f7518a795ae6a078dd"
+    },
+    "nuclear_S0": {
+      "path": "../../results_portable/nuclear_ils/fitted/S0_FITTED.json"
+    }
+  },
+  "path_map": {},
+  "path_roots": {
+    "tools": "../../tools/",
+    "inputs": "../../data/portable/",
+    "evidence": "../../data/portable/chloroplast_ils/",
+    "panthaica": "../../results_portable/panthaica",
+    "nuclear": "../../data/portable/nuclear_ils"
+  }
+}

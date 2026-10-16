@@ -2,20 +2,27 @@
 """Controls for published encoded calls; no genotype re-calling or ancestry inference."""
 from pathlib import Path
 import collections, datetime, gzip, hashlib, json, resource, time
-import numpy as np
-ROOT=Path(__file__).resolve().parents[1]
-SOURCE=ROOT/'inputs/published/Fig_4_nighbor-net__vcf_pp_kita_waka_mzawa_edo_yuga_utsu_mie_quinq.no_missing.m2M2vsnps.vcf.gz.gt.gz'
-OUT=ROOT/'published_controls'
+import portable_cli as portable
 N=1054866
 NAMES=['dt_kita1','dt_waka1','dt_mzawa','ed_hachi1','tn_yuga','tn_utsu','tn_mie1','dq_mie']
 
-def run():
+def configure(config_path):
+    return portable.configure(config_path, ('genotypes','comparison_receipt','out'))
+
+def plan(config_path):
+    c=configure(config_path);names=['ALL_SAMPLE_STATES.json','LEAVE_ONE_COMPARATOR_OUT.json','RECEIPT.json']
+    return portable.contract(c['_config'],{'genotypes':c['genotypes'],'comparison_receipt':c['comparison_receipt'],
+                             'script':Path(__file__)},{n:c['out']/n for n in names},output_root=c['out'],nuclear_columns=N)
+
+def run(c):
+    import numpy as np
+    SOURCE=c['genotypes'];OUT=c['out']
     resource.setrlimit(resource.RLIMIT_AS,(2*1024**3,2*1024**3))
     started=time.monotonic()
-    previous=json.loads((ROOT/'published_comparison/RECEIPT.json').read_text())
+    previous=json.loads(c['comparison_receipt'].read_text())
     digest=hashlib.sha256(SOURCE.read_bytes()).hexdigest()
     assert digest==previous['GT_file_sha256']
-    OUT.mkdir(exist_ok=False)
+    OUT.mkdir(parents=True,exist_ok=False)
     A=np.empty((N,8),dtype=np.int8)
     with gzip.open(SOURCE,'rt') as f:
         for i,line in enumerate(f):
@@ -66,4 +73,9 @@ def run():
     save('ALL_SAMPLE_STATES.json',per_sample); save('LEAVE_ONE_COMPARATOR_OUT.json',controls)
     save('RECEIPT.json',{'status':'COMPLETE_DESCRIPTIVE_CONTROLS','utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'input_sha256':digest,'input_sites':N,'all_heterozygous_sites':32,'all_alternate_homozygous_sites':566,'independent_scalar_rescan_all_controls_passed':True,'elapsed_seconds':time.monotonic()-started,'peak_rss_kib':resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,'limits':['Repository species labels and genotype encoding retained; source calls not revalidated.','Controls characterize the archived selected-SNP panel, not external validation.','Leaving one comparator out changes ascertainment; its comparator and Hachi use exactly the same reduced panel.','No ancestry proportions, molecular ploidy validation, hybrid generation or mechanism inferred.','Per-site observations are linked and not independent biological replicates.']})
     print(json.dumps({'status':'complete','controls':controls,'elapsed_seconds':time.monotonic()-started},indent=2))
-if __name__=='__main__':run()
+def main():
+    a=portable.parser(__doc__).parse_args();checked=portable.preflight(plan(a.config))
+    if not a.execute: portable.emit(checked); return
+    run(configure(a.config))
+
+if __name__=='__main__':main()

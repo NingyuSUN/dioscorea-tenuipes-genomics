@@ -1,0 +1,36 @@
+{
+  "paths": {
+    "root": "../../results_portable/panthaica",
+    "run_dir": "../../results_portable/panthaica/alignment_controls_configured"
+  },
+  "original_panel": true,
+  "inputs": {
+    "panel_evidence": {
+      "path": "../../data/portable/panthaica/ALIGNMENT_CONTROL_EVIDENCE.json",
+      "sha256": "ccbfb51d4c14a9853d36ce769dfc48f17b8a2c4d931409005ab1423fcbe3409d"
+    },
+    "marker_evidence": {
+      "path": "metadata/MARKER_READINESS_EVIDENCE.json",
+      "sha256": "a954b6987f3c28d8b6433132c45c621a4c0a9055bf28af1fc433304d0debae3a",
+      "original_sha256": "de212e8f6f5502f5d75e68f8d509433c7c9e9cc6638cae304b6ce16ef456d660",
+      "metadata_migration": {
+        "path": "metadata/METADATA_MIGRATION.json",
+        "sha256": "7be628227a459f24eb00f6e647c3c3ed97facb70d28545dda208b54140678108"
+      }
+    },
+    "marker_receipt": {
+      "path": "../../results_portable/panthaica/marker_recovery_configured/MARKER_RECOVERY_RECEIPT.json"
+    }
+  },
+  "tools": {
+    "mafft": "../../tools/mafft"
+  },
+  "path_map": {},
+  "path_roots": {
+    "tools": "../../tools/",
+    "inputs": "../../data/portable/",
+    "evidence": "../../data/portable/panthaica/",
+    "panthaica": "../../results_portable/panthaica",
+    "nuclear": "../../data/portable/nuclear_ils"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "receipts": "../../results_portable/workflow_receipts/chloroplast_edo_chain",
+  "frozen_dirs": [
+    "../../data/portable",
+    "../../tools"
+  ],
+  "stages": {
+    "cp_edo_comparison": {
+      "script": "scripts/research/chloroplast/historical/compare_published_edo.py",
+      "config": "cp_edo_comparison.json",
+      "inputs": [
+        "../../data/portable/chloroplast/compare_published_edo/published.gt.gz",
+        "../../data/portable/chloroplast/compare_published_edo/cp.fa"
+      ],
+      "outputs": [
+        "../../results_portable/chloroplast/compare_published_edo/NUCLEAR_PAIRWISE.json",
+        "../../results_portable/chloroplast/compare_published_edo/CP_PAIRWISE.json",
+        "../../results_portable/chloroplast/compare_published_edo/DIAGNOSTIC_STATE_COUNTS.json",
+        "../../results_portable/chloroplast/compare_published_edo/NUCLEAR_PAIRWISE.tsv",
+        "../../results_portable/chloroplast/compare_published_edo/CP_PAIRWISE.tsv",
+        "../../results_portable/chloroplast/compare_published_edo/RECEIPT.json"
+      ],
+      "after": [],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/chloroplast/compare_published_edo"
+      ]
+    },
+    "cp_edo_controls": {
+      "script": "scripts/research/chloroplast/historical/published_edo_controls.py",
+      "config": "cp_edo_controls.json",
+      "inputs": [
+        "../../data/portable/chloroplast/compare_published_edo/published.gt.gz",
+        "../../results_portable/chloroplast/compare_published_edo/RECEIPT.json"
+      ],
+      "outputs": [
+        "../../results_portable/chloroplast/published_edo_controls/ALL_SAMPLE_STATES.json",
+        "../../results_portable/chloroplast/published_edo_controls/LEAVE_ONE_COMPARATOR_OUT.json",
+        "../../results_portable/chloroplast/published_edo_controls/RECEIPT.json"
+      ],
+      "after": [
+        "cp_edo_comparison"
+      ],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/chloroplast/published_edo_controls"
+      ]
+    }
+  }
+}

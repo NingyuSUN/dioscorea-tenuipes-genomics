@@ -64,7 +64,7 @@ python scripts/research/panthaica/matched27/prepare_matched27.py --help
 python scripts/research/nuclear_ils/simulator/simulate_panel.py --help
 ```
 
-Files marked `historical_reference` retain stage-specific layouts, configuration files or cross-stage evidence checks. They are included to document the implemented methods and their evolution, and are not added to the default DAG. Do not call every historical file with `--help`: some older files execute code at import/startup.
+The 22 historical stages now support safe `--help`, configurable paths, read-only default preflight and explicit `--execute`. [Portable workflows](../portable/README.md) connect compatible stages through declared artifacts and preserve failures. Their fixed panel/evidence contracts remain active; they are separate optional workflows, not additions to the default research DAG.
 
 ## Dependencies and checks
 

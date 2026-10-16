@@ -1,0 +1,6 @@
+{
+  "matrix_dir": "../../results_portable/nuclear/matrices/genome_main_no2661",
+  "reference_tree": "../../results_portable/nuclear/results/genome_main_no2661/main.treefile",
+  "reference_tree_sha256": null,
+  "outdir": "../../results_portable/loci"
+}

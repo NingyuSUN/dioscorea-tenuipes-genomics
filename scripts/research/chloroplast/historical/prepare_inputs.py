@@ -3,10 +3,7 @@
 from pathlib import Path
 import argparse, collections, hashlib, json, re, shutil, time
 
-ROOT=Path('workspace/wgs/dt_research_p57_20260930/cp_trees')
-SOURCE=Path('workspace/historical_research/historical_Kita2022_prepare03_circular_both')
-P19=Path('workspace/wgs/dt_research_p19_20260928/whole_plastome')
-IQ=Path('workspace/wgs/dt_nuclear_expanded_20260915/tools/bin/iqtree2')
+import portable_cli as portable
 EXPECTED={
  'plus_Kita94.fixed_columns.fa':'59437ccd800c687f94ff39bf84dd99191930688fe50c08b6aca710d6ee51cdd8',
  'plus_Kita_Edo95.fixed_columns.fa':'45c23615b75b8a641b5036cbc40faafee39107c15f270653d966fc34241c0cf5',
@@ -31,8 +28,24 @@ def fasta(p):
             assert name;rows[name]+=line.strip().upper()
     assert rows and all(set(s)<=set('ACGTRYSWKMBDHVN-?') for s in rows.values())
     return rows
+def configure(config_path):
+    return portable.configure(config_path, ('source_dir', 'p19_dir', 'iqtree', 'out'))
+
+def plan(config_path):
+    c=configure(config_path)
+    inputs={**{'source/'+n:c['source_dir']/n for n in EXPECTED},
+            **{'p19/'+n:c['p19_dir']/n for n in P19_EXPECTED}, 'script':Path(__file__)}
+    names=['control93.fixed_columns.fa','control94.fixed_columns.fa','main95.fixed_columns.fa',
+           'fixed_regions.nex','fixed_models.nex','SOURCE_PREPARATION_RECEIPT.json',
+           'P19.main.log','P19.main.best_model.nex','P19.main.treefile','CONFIG.json','PREPARED.json']
+    return portable.contract(c['_config'],inputs,{n:c['out']/n for n in names},
+                             {'iqtree':c['iqtree']},c['out'],fixed_panels=[93,94,95],columns=124448)
+
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--out',type=Path,default=ROOT/'inputs');ap.add_argument('--execute-copy',action='store_true');a=ap.parse_args()
+    a=portable.parser(__doc__).parse_args()
+    checked=portable.preflight(plan(a.config))
+    if not a.execute: portable.emit(checked); return
+    c=configure(a.config);SOURCE=c['source_dir'];P19=c['p19_dir'];IQ=c['iqtree'];a.out=c['out']
     for n,h in EXPECTED.items():assert sha(SOURCE/n)==h,n
     for n,h in P19_EXPECTED.items():assert sha(P19/n)==h,n
     receipt=json.loads((SOURCE/'PREPARATION_RECEIPT.json').read_text());assert receipt['status']=='HISTORICAL_2022_PREPARED_SOURCE_SENSITIVITY_NO_TREE'
@@ -65,7 +78,6 @@ def main():
              'source_types':{KITA:'Natsume2022 author-declared Kita1 public CP assembly; retained original provenance label',HACHI:'DRR351751/SAMD00444457 Hachi1 (Edo-dokoro) first-1M-pair de novo/readback partial coordinate projection'},
              'no_source_replacement':'OQ525999.1 and all original93 remain; historical public Kita and Hachi are additional individuals, not replicate species observations.',
              'prepared_epoch':time.time(),'prepare_script_sha256':sha(__file__)}
-    if not a.execute_copy:print(json.dumps(summary,indent=2));return
     a.out.mkdir(parents=True,exist_ok=False)
     copies={'control93.fixed_columns.fa':P19/'whole_plastome_singleIR.fa',
             'control94.fixed_columns.fa':SOURCE/'plus_Kita94.fixed_columns.fa','main95.fixed_columns.fa':SOURCE/'plus_Kita_Edo95.fixed_columns.fa',

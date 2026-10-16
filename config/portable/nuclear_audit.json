@@ -1,0 +1,34 @@
+{
+  "paths": {
+    "panel_root": "../../data/portable/nuclear_ils/panel",
+    "output_dir": "../../results_portable/nuclear_ils/audit"
+  },
+  "audit_cpu": 0,
+  "inputs": {
+    "audit_contract": {
+      "path": "../../data/portable/nuclear_ils/AUDIT_CONTRACT.json"
+    },
+    "original_audit_script": {
+      "path": "../../data/portable/nuclear_ils/original_audit_panel.py"
+    },
+    "support_definition": {
+      "path": "../../data/portable/nuclear_ils/SUPPORT_DEFINITION_AUDIT.json",
+      "sha256": "b564ff3be9e7be9fbc260188182c8b95ab5e03030726f0fa5479952cd23a1f18"
+    },
+    "iqtree_binary": {
+      "path": "../../tools/iqtree2",
+      "sha256": "a5a11554ca60b5682fd50af81301ea247c887d93a7d7014fcd61c0fced033832"
+    },
+    "scope_receipt": {
+      "path": "../../data/portable/nuclear_ils/AUDIT_SCOPE_RECEIPT.json"
+    }
+  },
+  "path_map": {},
+  "path_roots": {
+    "tools": "../../tools/",
+    "inputs": "../../data/portable/",
+    "evidence": "../../data/portable/nuclear_ils/",
+    "panthaica": "../../results_portable/panthaica",
+    "nuclear": "../../data/portable/nuclear_ils"
+  }
+}

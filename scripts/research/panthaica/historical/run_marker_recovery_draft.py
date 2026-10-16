@@ -17,11 +17,18 @@ import subprocess
 import sys
 import time
 
-ROOT=Path('workspace/wgs/dt_research_p57_20260930/panthaica')
-ENV=Path('workspace/miniconda3/envs/busco/bin')
+ROOT=None
+ENV=None
+PORTABLE=None
+TOOLS={}
 EVIDENCE_SHA='de212e8f6f5502f5d75e68f8d509433c7c9e9cc6638cae304b6ce16ef456d660'
 AA=set('ACDEFGHIKLMNPQRSTVWY')
 
+
+try:
+    from .portable_inputs import Config, report, require_preflight, run_directory
+except ImportError:
+    from portable_inputs import Config, report, require_preflight, run_directory
 
 def now():return dt.datetime.now(dt.timezone.utc).isoformat()
 def sha(p):
@@ -36,9 +43,10 @@ def save(path,data):
     os.replace(temp,path)
 
 def evidence():
-    p=Path(__file__).with_name('MARKER_READINESS_EVIDENCE.json')
-    if sha(p)!=EVIDENCE_SHA:raise ValueError('Readiness evidence hash mismatch')
-    e=json.loads(p.read_text())
+    row=PORTABLE.input('marker_evidence',EVIDENCE_SHA)
+    p=Path(row['path'])
+    if sha(p)!=row['sha256']:raise ValueError('Readiness evidence hash mismatch')
+    e=PORTABLE.relocated(json.loads(p.read_text()))
     assert e['baseline']['genes']==173 and len(e['baseline']['markers'])==173
     assert e['baseline']['main_sha256']=='982addd02b6a6d0a188aa0de9b8e688b95bec926703094ab7f9238a8a91cc01e'
     return e
@@ -127,18 +135,17 @@ def validate_assembly_scope(assembly):
         raise ValueError('Pilot/prefix/unknown assembly cannot enter formal marker recovery')
 
 def execute(a):
-    if ROOT.resolve()!=ROOT or not Path('workspace/').is_dir():raise RuntimeError('Server/path guard failed')
+    if ROOT is None or ROOT.resolve()!=ROOT or not ROOT.is_dir():raise RuntimeError('Configured task root is not an existing absolute directory')
     e=evidence()
     transcript=Path(a.transcripts).resolve();assembly_receipt=Path(a.assembly_receipt).resolve()
-    if ROOT not in transcript.parents or ROOT not in assembly_receipt.parents:raise ValueError('Require task-local transcript and assembly receipt')
     if sha(transcript)!=a.transcripts_sha256 or sha(assembly_receipt)!=a.assembly_receipt_sha256:raise ValueError('Assembly input/provenance hash mismatch')
-    assembly=json.loads(assembly_receipt.read_text())
+    assembly=PORTABLE.relocated(json.loads(assembly_receipt.read_text()))
     if assembly.get('status')!='COMPLETE':raise ValueError('Normalized assembly receipt must have status COMPLETE')
     validate_assembly_scope(assembly)
     binding=assembly.get('transcripts',{})
     if binding.get('sha256')!=a.transcripts_sha256 or Path(binding.get('path','')).resolve()!=transcript:
         raise ValueError('Assembly receipt must bind transcripts.path and transcripts.sha256')
-    downloaded=json.loads((ROOT/'DOWNLOAD_RECEIPT.json').read_text())
+    downloaded=json.loads(Path(PORTABLE.input('download_receipt')['path']).read_text())
     if downloaded.get('status')!='COMPLETE' or downloaded.get('pairs_done')!=28665951:raise ValueError('Full raw input validation receipt is required')
     for item in e['busco_sources'].values():
         if sha(item['path'])!=item['sha256']:raise ValueError('BUSCO installed source changed')
@@ -148,23 +155,23 @@ def execute(a):
     for row in e['baseline']['markers']:
         if sha(row['raw_path'])!=row['raw_sha256']:raise ValueError('Baseline raw marker changed')
     if shutil.disk_usage(ROOT).free<8*1024**3:raise RuntimeError('Require 8 GiB free for BUSCO and copied lineage')
-    environment=os.environ.copy();environment.update(PATH=str(ENV)+':'+environment.get('PATH',''),PYTHONDONTWRITEBYTECODE='1',OMP_NUM_THREADS='4',OPENBLAS_NUM_THREADS='1',MKL_NUM_THREADS='1')
-    for command,wanted in [([str(ENV/'busco'),'--version'],'BUSCO 5.8.3'),([str(ENV/'metaeuk'),'version'],'7.bba0d80')]:
+    environment=os.environ.copy();environment.update(PATH=os.pathsep.join(dict.fromkeys([str(Path(TOOLS['busco']).parent),str(Path(TOOLS['metaeuk']).parent)]))+os.pathsep+environment.get('PATH',''),PYTHONDONTWRITEBYTECODE='1',OMP_NUM_THREADS='4',OPENBLAS_NUM_THREADS='1',MKL_NUM_THREADS='1')
+    for command,wanted in [([TOOLS['busco'],'--version'],'BUSCO 5.8.3'),([TOOLS['metaeuk'],'version'],'7.bba0d80')]:
         p=subprocess.run(command,capture_output=True,text=True,check=True,env=environment)
         if wanted not in p.stdout+p.stderr:raise ValueError('Tool version drift')
     with (ROOT/'MARKER_RECOVERY.lock').open('a+') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        stamp=dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ');out=ROOT/('marker_recovery_'+stamp)
-        out.mkdir();lineage=out/'lineage/embryophyta_odb10';shutil.copytree(original,lineage);check_lineage(lineage,e)
+        stamp=dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ');out=run_directory(PORTABLE,ROOT) or ROOT/('marker_recovery_'+stamp)
+        out.mkdir(parents=True,exist_ok=False);lineage=out/'lineage/embryophyta_odb10';shutil.copytree(original,lineage);check_lineage(lineage,e)
         run=out/'busco/Dioscorea_panthaica_DIPA1'
-        busco=[str(ENV/'python'),str(ENV/'busco'),'-i',str(transcript),'-m','transcriptome','--metaeuk','-l',str(lineage),'--offline','--download_path',str(out/'busco_downloads'),'-o',run.name,'--out_path',str(run.parent),'-c','4','--opt-out-run-stats','--metaeuk_parameters=--split-memory-limit=6G','--metaeuk_rerun_parameters=--split-memory-limit=6G']
+        busco=[TOOLS['busco_python'],TOOLS['busco'],'-i',str(transcript),'-m','transcriptome','--metaeuk','-l',str(lineage),'--offline','--download_path',str(out/'busco_downloads'),'-o',run.name,'--out_path',str(run.parent),'-c','4','--opt-out-run-stats','--metaeuk_parameters=--split-memory-limit=6G','--metaeuk_rerun_parameters=--split-memory-limit=6G']
         unit='dt-panthaica-busco-'+stamp.lower()
         guard=Path(__file__).with_name('exec_verified_scope.py')
         effective_path=out/'BUSCO.effective_resources.json'
-        cmd=['systemd-run','--user','--scope','--quiet','--unit='+unit,'-p','MemoryMax=8G','-p','MemorySwapMax=0',sys.executable,str(guard),'--memory-bytes',str(8*1024**3),'--cpus','4','--receipt',str(effective_path),'--','/usr/bin/time','-v']+busco
-        state={'status':'RUNNING','started_utc':now(),'command':cmd,'worker_pid':os.getpid(),'process_start_ticks':Path('/proc/self/stat').read_text().split()[21],'scope_guard_sha256':sha(guard),'effective_resource_receipt':str(effective_path),'cpu_limit_method':'inherited OS affinity','transcripts_path':str(transcript),'transcripts_sha256':a.transcripts_sha256,'assembly_receipt_path':str(assembly_receipt),'assembly_receipt_sha256':a.assembly_receipt_sha256,'busco_run':str(run),'readiness_evidence_sha256':EVIDENCE_SHA,'driver_sha256':sha(__file__),'lineage_manifest_sha256':e['lineage']['manifest_sha256'],'threads':4,'busco_cgroup_memory_max_bytes':8*1024**3,'wall_time_limit':None,'out':str(out)}
+        cmd=[TOOLS['systemd_run'],'--user','--scope','--quiet','--unit='+unit,'-p','MemoryMax=8G','-p','MemorySwapMax=0',sys.executable,str(guard),'--memory-bytes',str(8*1024**3),'--cpus','4','--receipt',str(effective_path),'--',TOOLS['time'],'-v']+busco
+        state={'status':'RUNNING','started_utc':now(),'command':cmd,'worker_pid':os.getpid(),'process_start_ticks':Path('/proc/self/stat').read_text().split()[21],'scope_guard_sha256':sha(guard),'effective_resource_receipt':str(effective_path),'cpu_limit_method':'inherited OS affinity','transcripts_path':str(transcript),'transcripts_sha256':a.transcripts_sha256,'assembly_receipt_path':str(assembly_receipt),'assembly_receipt_sha256':a.assembly_receipt_sha256,'busco_run':str(run),'readiness_evidence_sha256':PORTABLE.input('marker_evidence',EVIDENCE_SHA)['sha256'],'driver_sha256':sha(__file__),'lineage_manifest_sha256':e['lineage']['manifest_sha256'],'threads':4,'busco_cgroup_memory_max_bytes':8*1024**3,'wall_time_limit':None,'out':str(out)}
         def stop(sig,frame):
-            subprocess.run(['systemctl','--user','stop',unit+'.scope'],capture_output=True)
+            subprocess.run([TOOLS['systemctl'],'--user','stop',unit+'.scope'],capture_output=True)
             raise KeyboardInterrupt('Stopped only owned BUSCO scope')
         signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
         try:
@@ -186,14 +193,26 @@ def execute(a):
             state.update(status='INTERRUPTED' if isinstance(ex,KeyboardInterrupt) else 'FAILED',finished_utc=now(),error=type(ex).__name__+': '+str(ex));save(out/'STATUS.json',state);save(ROOT/'MARKER_RECOVERY_CURRENT.json',state);raise
         print(json.dumps(state,indent=2))
 
-def main():
-    p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--execute',action='store_true')
-    for key in ['transcripts','transcripts-sha256','assembly-receipt','assembly-receipt-sha256']:p.add_argument('--'+key)
-    a=p.parse_args()
-    if not a.execute:
-        print(json.dumps({'status':'DRAFT_DRY_RUN_NO_WRITES_NO_BUSCO','lineage':'embryophyta_odb10 2024-01-08; 1614 profiles','target_fixed_loci':173,'mode':'eukaryotic transcriptome, MetaEuk + HMMER','threads':4,'busco_memory_scope':'MemoryMax=8G, MemorySwapMax=0','candidate_length_ratio_to_fixed_baseline_median':[0.70,1.50],'alignment_or_tree_started':False},indent=2));return
-    if not all([a.transcripts,a.transcripts_sha256,a.assembly_receipt,a.assembly_receipt_sha256]):p.error('Execution requires transcript and normalized complete assembly receipt paths plus both SHA256 values')
-    execute(a)
 
-if __name__=='__main__':main()
+def plan(config_path):
+    c=Config(config_path);root=c.path('root');fixed=run_directory(c,root)
+    return {'script':'run_marker_recovery_draft',
+      'inputs':[c.input('marker_evidence',EVIDENCE_SHA),c.input('transcripts'),c.input('assembly_receipt'),c.input('download_receipt')],
+      'outputs':[str(fixed/n) for n in ['MARKER_RECOVERY_RECEIPT.json','CANDIDATE_RECEIPT.json','STATUS.json']] if fixed else [], 'output_directory':str(fixed or root),'required_threads':4,
+      'dynamic_outputs':{'pattern':'marker_recovery_<UTC timestamp>/','files':['STATUS.json','MARKER_RECOVERY_RECEIPT.json','CANDIDATE_RECEIPT.json','candidates/<marker>.faa','busco/Dioscorea_panthaica_DIPA1/run_embryophyta_odb10/full_table.tsv']},
+      'tools':{**{k:c.tool(k) for k in ('busco','busco_python','metaeuk')},**{k:c.tool(k,d) for k,d in [('systemd_run','systemd-run'),('systemctl','systemctl'),('time','time')]}},
+      'python_packages':['Bio'],'scientific_contract':'173 fixed markers; 1614 BUSCO statuses; full-read assembly only; 4 CPUs / 8 GiB / no swap',
+      'transitive_inputs':'marker_evidence binds baseline main/summary/raw loci, BUSCO sources, and the complete lineage file manifest'}
+
+def main():
+    global ROOT,ENV,PORTABLE,TOOLS
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--config',required=True,type=Path);p.add_argument('--execute',action='store_true');a=p.parse_args()
+    PORTABLE=Config(a.config);spec=plan(a.config)
+    if not a.execute:return report(spec)
+    require_preflight(spec);ROOT=PORTABLE.path('root');TOOLS=spec['tools'];ENV=Path(TOOLS['busco']).parent
+    for role in ('transcripts','assembly_receipt'):
+        row=PORTABLE.input(role)
+        if not row['sha256']:raise ValueError(role+' requires an explicit SHA-256')
+        setattr(a,role,row['path']);setattr(a,role+'_sha256',row['sha256'])
+    execute(a);return 0
+if __name__=='__main__':raise SystemExit(main())

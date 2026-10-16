@@ -26,7 +26,8 @@ class PreparedGateTests(unittest.TestCase):
             m.validate_assembly_scope({'input_scope':'NONRANDOM_PREFIX_1M','source_raw_pairs':28665951,'formal_marker_eligible':False})
     def test_full_input_scope_can_proceed_to_other_checks(self):
         m.validate_assembly_scope({'input_scope':'FULL_CRR515167','source_raw_pairs':28665951,'formal_marker_eligible':True})
-    def test_fixed_evidence_has_173(self):
-        e=m.evidence();self.assertEqual(len(e['baseline']['markers']),173)
-        self.assertNotIn('2661at3193',{x['marker'] for x in e['baseline']['markers']})
+    def test_evidence_is_an_explicit_config_dependency(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/'config.json';p.write_text('{}')
+            with self.assertRaisesRegex(ValueError,'Missing paths.root'):m.plan(p)
 if __name__=='__main__':unittest.main()

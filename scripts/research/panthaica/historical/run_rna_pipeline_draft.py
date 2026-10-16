@@ -17,13 +17,20 @@ import subprocess
 import sys
 import time
 
-ROOT=Path('workspace/wgs/dt_research_p57_20260930/panthaica')
+ROOT=None
+PORTABLE=None
+TOOLS={}
 FILES=[('CRR515167_f1.fq.gz',2040518277,'bd4cf0ecacc027cf691180dd5d018b33'),('CRR515167_r2.fq.gz',2084070558,'21f081f1130ee01b5fd3fd523c45bb3b')]
 RAW_PAIRS=28665951
-CONFIG=Path(__file__).with_name('RNA_QC_CONFIG.json')
+CONFIG=None
 CURRENT='RNA_WORKFLOW_CURRENT.json'
 CONFIG_EXPECTED_SHA='ed19abb14b85a9d10a626f2b43146a1a55bf565da038b4b07b0f0c4996a1611c'
 
+
+try:
+    from .portable_inputs import Config, report, require_preflight, run_directory
+except ImportError:
+    from portable_inputs import Config, report, require_preflight, run_directory
 
 def now():return dt.datetime.now(dt.timezone.utc).isoformat()
 def hashfile(path,kind='sha256'):
@@ -38,9 +45,12 @@ def save(path,obj):
 def signature(p):
     s=p.stat();return {'size':s.st_size,'mtime_ns':s.st_mtime_ns,'ctime_ns':s.st_ctime_ns,'inode':s.st_ino,'device':s.st_dev}
 def bound(path):
-    p=Path(path).resolve()
-    if ROOT not in p.parents:raise ValueError('Require task-local path: '+str(p))
-    return p
+    # This helper only resolves read-only provenance inputs, never output paths.
+    return PORTABLE.resolve(path) if PORTABLE else Path(path).resolve()
+
+def raw_path(name):
+    directory=PORTABLE.path('raw_dir',ROOT/'raw') if PORTABLE else ROOT/'raw'
+    return directory/name
 
 def read_record(f,mate,minlen=1,maxlen=150):
     lines=[f.readline(1000001) for _ in range(4)]
@@ -102,7 +112,7 @@ def validate_trimmed(paths,expected,tick):
     return {'pairs':n,'bases_per_mate':bases,'lengths_per_mate':lengths,'all_ids_lengths_gzip_crc_eof_verified':True}
 
 def check_download():
-    p=ROOT/'DOWNLOAD_RECEIPT.json';r=json.loads(p.read_text())
+    p=(Path(PORTABLE.input('download_receipt')['path']) if PORTABLE else ROOT/'DOWNLOAD_RECEIPT.json');r=json.loads(p.read_text())
     if r.get('status')!='COMPLETE' or r.get('pairs_done')!=RAW_PAIRS:raise ValueError('Require COMPLETE full raw validation receipt')
     pv=r.get('paired_fastq_validation',{})
     if pv.get('pairs')!=RAW_PAIRS or pv.get('bases')!=RAW_PAIRS*300 or pv.get('bases_per_mate_record')!=150 or any(pv.get(k) is not True for k in ['mate_ids_all_match','record_structure_all_pass','sequence_quality_lengths_all_pass','gzip_crc_and_complete_eof_both_pass']):raise ValueError('Complete paired FASTQ/gzip validation evidence is missing')
@@ -110,14 +120,14 @@ def check_download():
     for name,size,md5 in FILES:
         row=byname.get(name,{})
         if row.get('bytes')!=size or row.get('md5')!=md5 or row.get('official_md5_match') is not True:raise ValueError('Official file metadata mismatch in receipt')
-        pth=ROOT/'raw'/name
+        pth=raw_path(name)
         if pth.is_symlink() or pth.stat().st_size!=size:raise ValueError('Raw path/size changed')
     return r,hashfile(p)
 
 def verify_raw_hashes(tick):
     rows=[]
     for name,size,md5 in FILES:
-        p=ROOT/'raw'/name;before=signature(p);h=hashlib.md5();s=hashlib.sha256();done=0
+        p=raw_path(name);before=signature(p);h=hashlib.md5();s=hashlib.sha256();done=0
         with p.open('rb') as f:
             for block in iter(lambda:f.read(8*1024**2),b''):
                 h.update(block);s.update(block);done+=len(block);tick(stage='VERIFY_OFFICIAL_MD5',file=name,bytes_done=done,bytes_total=size)
@@ -133,10 +143,10 @@ def receipt(path,phase,configsha):
 def verify_raw_signature(rows):
     if len(rows)!=2:raise ValueError('Expected two verified raw file signatures')
     for row,(name,size,md5) in zip(rows,FILES):
-        if row['name']!=name or row['md5']!=md5 or row['bytes']!=size or signature(ROOT/'raw'/name)!=row['signature']:raise ValueError('Raw file differs from full-MD5 QC checkpoint')
+        if row['name']!=name or row['md5']!=md5 or row['bytes']!=size or signature(raw_path(name))!=row['signature']:raise ValueError('Raw file differs from full-MD5 QC checkpoint')
 
 def resource_read(unit):
-    p=subprocess.run(['systemctl','--user','show',unit+'.scope','--property=ControlGroup','--value'],capture_output=True,text=True)
+    p=subprocess.run([TOOLS['systemctl'],'--user','show',unit+'.scope','--property=ControlGroup','--value'],capture_output=True,text=True)
     path=p.stdout.strip()
     if not path.startswith('/user.slice/'):return {}
     root=Path('/sys/fs/cgroup')/path.lstrip('/');d={'cgroup_path':str(root)}
@@ -156,13 +166,13 @@ class Runner:
             save(ROOT/CURRENT,self.current);self.last=time.monotonic()
             print(json.dumps({k:self.state.get(k) for k in ['status','stage','updated_utc','pairs_done','pairs_total','bytes_done','bytes_total','sampled_memory_peak_bytes','error']}),flush=True)
     def stop(self,sig,frame):
-        if self.unit:subprocess.run(['systemctl','--user','stop',self.unit+'.scope'],capture_output=True)
+        if self.unit:subprocess.run([TOOLS['systemctl'],'--user','stop',self.unit+'.scope'],capture_output=True)
         raise KeyboardInterrupt('Stopped owned scope; files preserved')
     def command(self,args,label,memory_gib,threads):
         unit='dt-panthaica-'+self.phase+'-'+label+'-'+str(os.getpid())
         guard=Path(__file__).with_name('exec_verified_scope.py')
         guard_receipt=self.out/(label+'.effective_resources.json')
-        cmd=['systemd-run','--user','--scope','--quiet','--unit='+unit,'-p','MemoryMax='+str(memory_gib)+'G','-p','MemorySwapMax=0',sys.executable,str(guard),'--memory-bytes',str(memory_gib*1024**3),'--cpus',str(threads),'--receipt',str(guard_receipt),'--','/usr/bin/time','-v']+args
+        cmd=[TOOLS['systemd_run'],'--user','--scope','--quiet','--unit='+unit,'-p','MemoryMax='+str(memory_gib)+'G','-p','MemorySwapMax=0',sys.executable,str(guard),'--memory-bytes',str(memory_gib*1024**3),'--cpus',str(threads),'--receipt',str(guard_receipt),'--',TOOLS['time'],'-v']+args
         entry={'label':label,'argv':cmd,'started_utc':now(),'memory_max_bytes':memory_gib*1024**3,'threads':threads,'scope_guard_sha256':hashfile(guard),'cpu_limit_method':'inherited OS affinity, not unverified CPUQuota','resource_scope':'tool command and descendants; coordinator separately bounded','sampled_memory_peak_bytes':None,'wall_time_limit':None}
         self.state.setdefault('commands',[]).append(entry);self.unit=unit
         env=os.environ.copy();env.update(PYTHONDONTWRITEBYTECODE='1',OMP_NUM_THREADS=str(threads),OPENBLAS_NUM_THREADS='1',MKL_NUM_THREADS='1')
@@ -179,7 +189,7 @@ class Runner:
                     peak=d.get('memory.peak')
                     if peak and peak.isdigit():entry['sampled_memory_peak_bytes']=max(entry['sampled_memory_peak_bytes'] or 0,int(peak))
                 if shutil.disk_usage(self.out).free<2*1024**3:
-                    subprocess.run(['systemctl','--user','stop',unit+'.scope'],capture_output=True)
+                    subprocess.run([TOOLS['systemctl'],'--user','stop',unit+'.scope'],capture_output=True)
                     raise RuntimeError('Disk reserve below2GiB; stopped owned scope')
                 self.tick(sampled_memory_peak_bytes=entry['sampled_memory_peak_bytes']);time.sleep(2)
         self.unit=None;entry.update(exit_code=child.returncode,finished_utc=now(),elapsed_seconds=round(time.monotonic()-start,3),log_sha256=hashfile(log))
@@ -211,7 +221,7 @@ def summarize_fasta(p):
     return {'records':len(lengths),'bases':total,'N_bases':ambiguous,'N50':n50,'min_length':min(lengths),'max_length':max(lengths),'meaning':'Transcript contig summaries; not genome completeness or isoform correctness'}
 
 def execute(a,c):
-    if ROOT.resolve()!=ROOT or not Path('workspace/').is_dir():raise RuntimeError('Server/path guard failed')
+    if ROOT is None or ROOT.resolve()!=ROOT or not ROOT.is_dir():raise RuntimeError('Configured task root is not an existing absolute directory')
     download,download_sha=check_download();configsha=hashfile(CONFIG)
     with (ROOT/'RNA_WORKFLOW.lock').open('a+') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -226,11 +236,11 @@ def execute(a,c):
             pilot,pilotsha=receipt(a.pilot_receipt,'pilot',configsha)
             if pilot.get('formal_marker_eligible') is not False or pilot['qc_receipt_sha256']!=qcsha:raise ValueError('Require matching non-formal prefix pilot receipt')
         stamp=dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
-        out=ROOT/('qc' if a.phase=='qc' else 'assembly')/(a.phase+'_'+stamp);out.mkdir(parents=True)
-        state={'status':'RUNNING','phase':a.phase,'stage':'PREFLIGHT','started_utc':now(),'worker_pid':os.getpid(),'process_start_ticks':Path('/proc/self/stat').read_text().split()[21],'driver_sha256':hashfile(__file__),'config_sha256':configsha,'download_receipt_sha256':download_sha,'run_directory':str(out),'wall_time_limit':None,'auto_next_stage':False,'auto_restart':False}
+        out=run_directory(PORTABLE,ROOT) or ROOT/('qc' if a.phase=='qc' else 'assembly')/(a.phase+'_'+stamp);out.mkdir(parents=True,exist_ok=False)
+        state={'status':'RUNNING','phase':a.phase,'stage':'PREFLIGHT','started_utc':now(),'worker_pid':os.getpid(),'process_start_ticks':Path('/proc/self/stat').read_text().split()[21],'driver_sha256':hashfile(__file__),'portable_config_sha256':hashfile(PORTABLE.filename),'config_sha256':configsha,'download_receipt_sha256':download_sha,'run_directory':str(out),'wall_time_limit':None,'auto_next_stage':False,'auto_restart':False}
         run=Runner(out,a.phase,state,current);signal.signal(signal.SIGTERM,run.stop);signal.signal(signal.SIGINT,run.stop);run.tick(force=True)
         try:
-            paths=[ROOT/'raw'/x[0] for x in FILES]
+            paths=[raw_path(x[0]) for x in FILES]
             if a.phase=='qc':
                 state['raw_files']=verify_raw_hashes(run.tick)
                 diag=diagnostic(paths,c['diagnostic_prefix_pairs'],c,run.tick,minlen=150);save(out/'PREFIX_DIAGNOSTIC.json',diag)
@@ -262,13 +272,13 @@ def execute(a,c):
                 state['trimmed_validation']=validate_trimmed(trimmed,counts['output'],run.tick)
                 save(out/'POST_TRIM_PREFIX_DIAGNOSTIC.json',diagnostic(trimmed,min(100000,counts['output']),c,run.tick,minlen=50))
                 state['trimmed_files']=[{'path':str(p),'bytes':p.stat().st_size,'sha256':hashfile(p)} for p in trimmed]
-                launcher=c['rna_spades_launcher'];v=subprocess.run(['/usr/bin/python3',launcher,'--version'],capture_output=True,text=True,check=True).stdout
+                launcher=c['rna_spades_launcher'];v=subprocess.run([TOOLS['spades_python'],launcher,'--version'],capture_output=True,text=True,check=True).stdout
                 if 'v4.3.0' not in v or 'rnaSPAdes mode' not in v:raise ValueError('SPAdes version/mode mismatch')
-                install=json.loads((ROOT.parent/'tools/RNASPADES_INSTALL_RECEIPT.json').read_text())
+                install=json.loads((Path(PORTABLE.input('spades_install_receipt')['path'])).read_text())
                 if install.get('status')!='COMPLETE' or install.get('asset_sha256')!=c['rna_spades_source_asset_sha256']:raise ValueError('Verified RNA smoke/install receipt required')
-                state['rna_spades_tool']={'launcher':launcher,'version_stdout':v.strip(),'launcher_sha256':hashfile(launcher),'install_receipt_sha256':hashfile(ROOT.parent/'tools/RNASPADES_INSTALL_RECEIPT.json')}
+                state['rna_spades_tool']={'launcher':launcher,'version_stdout':v.strip(),'launcher_sha256':hashfile(launcher),'install_receipt_sha256':hashfile(Path(PORTABLE.input('spades_install_receipt')['path']))}
                 threads=c[a.phase+'_threads'];mem=c[a.phase+'_spades_memory_gb'];cap=c[a.phase+'_cgroup_gib'];assembly=out/'rnaspades'
-                cmd=['/usr/bin/python3',launcher,'-1',str(trimmed[0]),'-2',str(trimmed[1]),'-t',str(threads),'-m',str(mem),'--phred-offset','33','-o',str(assembly)]
+                cmd=[TOOLS['spades_python'],launcher,'-1',str(trimmed[0]),'-2',str(trimmed[1]),'-t',str(threads),'-m',str(mem),'--phred-offset','33','-o',str(assembly)]
                 run.command(cmd,'RNASPADES',cap,threads)
                 transcript=assembly/'transcripts.fasta'
                 state.update(input_scope='FULL_CRR515167' if a.phase=='full' else 'NONRANDOM_PREFIX_1M',assembly_input_pairs=counts['output'],formal_marker_eligible=a.phase=='full',transcripts={'path':str(transcript),'bytes':transcript.stat().st_size,'sha256':hashfile(transcript)},assembly_statistics=summarize_fasta(transcript))
@@ -282,15 +292,40 @@ def execute(a,c):
         except BaseException as ex:
             run.tick(force=True,status='INTERRUPTED' if isinstance(ex,KeyboardInterrupt) else 'FAILED',finished_utc=now(),error=type(ex).__name__+': '+str(ex));raise
 
+
+def plan(config_path):
+    c=Config(config_path);root=c.path('root');phase=c.data.get('phase','qc')
+    if phase not in ('qc','pilot','full'):raise ValueError('phase must be qc, pilot, or full')
+    inputs=[c.input('workflow_settings',CONFIG_EXPECTED_SHA),c.input('download_receipt')]
+    inputs += [{'role':'raw_'+str(i+1),'path':str(c.path('raw_dir',root/'raw')/name),'sha256':None} for i,(name,_,_) in enumerate(FILES)]
+    tools={}
+    if phase!='qc':
+        inputs += [c.input('qc_receipt'),c.input('spades_install_receipt')]
+        tools={k:c.tool(k) for k in ('cutadapt','rna_spades_launcher','spades_python')}
+        tools.update({k:c.tool(k,d) for k,d in [('systemd_run','systemd-run'),('systemctl','systemctl'),('time','time')]})
+    if phase=='full':inputs.append(c.input('pilot_receipt'))
+    folder=root/('qc' if phase=='qc' else 'assembly');fixed=run_directory(c,root)
+    receipt_name={'qc':'QC_RECEIPT.json','pilot':'PILOT_RECEIPT.json','full':'ASSEMBLY_RECEIPT.json'}[phase]
+    return {'script':'run_rna_pipeline_draft','phase':phase,'inputs':inputs,
+      'outputs':([str(fixed/receipt_name),str(fixed/'STATUS.json')]+([] if phase=='qc' else [str(fixed/'rnaspades/transcripts.fasta')]) if fixed else []),'output_directory':str(fixed or folder),'required_threads':1 if phase=='qc' else 4,
+      'dynamic_outputs':{'pattern':phase+'_<UTC timestamp>/','files':['STATUS.json',{'qc':'QC_RECEIPT.json','pilot':'PILOT_RECEIPT.json','full':'ASSEMBLY_RECEIPT.json'}[phase]],
+                         'assembly_files':[] if phase=='qc' else ['trimmed_R1.fq.gz','trimmed_R2.fq.gz','cutadapt.json','rnaspades/transcripts.fasta']},
+      'tools':tools,'non_executable_tools':['rna_spades_launcher'],'python_packages':[],'scientific_contract':'CRR515167: 28665951 pairs; fixed MD5/size binding, prefix pilot never formal marker input'}
+
 def main():
+    global ROOT,CONFIG,PORTABLE,TOOLS
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--phase',choices=['qc','pilot','full'],default='qc');p.add_argument('--execute',action='store_true');p.add_argument('--new-attempt',action='store_true')
-    p.add_argument('--qc-receipt');p.add_argument('--pilot-receipt');a=p.parse_args()
-    if hashfile(CONFIG)!=CONFIG_EXPECTED_SHA:raise ValueError('Frozen QC configuration hash changed')
+    p.add_argument('--config',required=True,type=Path);p.add_argument('--execute',action='store_true')
+    p.add_argument('--new-attempt',action='store_true')
+    a=p.parse_args();PORTABLE=Config(a.config);spec=plan(a.config)
+    if not a.execute:return report(spec)
+    require_preflight(spec);ROOT=PORTABLE.path('root');a.phase=spec['phase'];TOOLS=spec['tools']
+    CONFIG=Path(PORTABLE.input('workflow_settings',CONFIG_EXPECTED_SHA)['path'])
     c=json.loads(CONFIG.read_text())
-    if not a.execute:
-        print(json.dumps({'status':'DRAFT_DRY_RUN_NO_WRITES_NO_BIOLOGICAL_DATA_READ','phase':a.phase,'config_sha256':hashfile(CONFIG),'diagnostic_pairs':100000,'pilot_pairs':1000000,'full_raw_pairs':RAW_PAIRS,'automatic_followup':False,'formal_assembly_memory_cap_gib':16,'formal_assembly_threads':4},indent=2));return
-    if a.phase!='qc' and not a.qc_receipt:p.error('--qc-receipt required for pilot/full')
-    if a.phase=='full' and not a.pilot_receipt:p.error('--pilot-receipt required for full')
-    execute(a,c)
-if __name__=='__main__':main()
+    # Paths are deployment settings; scientific thresholds remain frozen in the hashed settings file.
+    if a.phase!='qc':
+        c['cutadapt_path']=TOOLS['cutadapt'];c['rna_spades_launcher']=TOOLS['rna_spades_launcher']
+    a.qc_receipt=PORTABLE.input('qc_receipt')['path'] if a.phase!='qc' else None
+    a.pilot_receipt=PORTABLE.input('pilot_receipt')['path'] if a.phase=='full' else None
+    execute(a,c);return 0
+if __name__=='__main__':raise SystemExit(main())

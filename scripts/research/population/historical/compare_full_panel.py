@@ -1,24 +1,34 @@
 """Descriptive comparison of the frozen full-panel fits; never refits inputs."""
 from pathlib import Path
+import sys
+if not __debug__:
+    raise RuntimeError('Optimized Python disables required scientific assertions; run without -O.')
+_HELPER_DIR = str(Path(__file__).resolve().parent)
+if _HELPER_DIR not in sys.path:
+    sys.path.insert(0, _HELPER_DIR)
 import csv, hashlib, json
+import os
+# Bound native numerical libraries before importing them in the CLI process.
+for _thread_env in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'VECLIB_MAXIMUM_THREADS', 'BLIS_NUM_THREADS'):
+    os.environ[_thread_env] = '1'
 import numpy as np
 from scipy.spatial.distance import pdist
 from scipy.linalg import subspace_angles
-ROOT=Path(__file__).resolve().parent
-PRIVATE=ROOT/'private_run_v1'
-OUT=ROOT/'comparison_v1'
+PRIVATE=None
+OUT=None
+PLINK_ROOT=None
 def sha(p): return hashlib.sha256(p.read_bytes()).hexdigest()
 def write_table(name, rows):
     with (OUT/name).open('x') as f:
         w=csv.DictWriter(f,fieldnames=list(rows[0]),delimiter='\t',lineterminator='\n')
         w.writeheader(); w.writerows(rows)
-def main():
-    OUT.mkdir(exist_ok=False)
+def execute():
+    OUT.mkdir(parents=True,exist_ok=False)
     r=json.loads((PRIVATE/'RUN_RECEIPT.json').read_text())
     assert r['status']=='COMPLETED_PENDING_ROOT_SCIENTIFIC_AUDIT'
     assert r['selected_sites']==37566 and len(r['arms'])==12
     for x in r['output_files']: assert sha(PRIVATE/x['path'])==x['sha256']
-    a=PRIVATE/'A_PLINK'; ar=json.loads((a/'RECEIPT.json').read_text())
+    a=PLINK_ROOT; ar=json.loads((a/'RECEIPT.json').read_text())
     assert ar['status']=='COMPLETED_PENDING_INDEPENDENT_AUDIT'
     for x in ar['outputs']: assert sha(a/x['path'])==x['sha256']
     names=['A_PLINK',*r['arms']]; matrices={};vectors={};values={};records=[]
@@ -96,4 +106,53 @@ def main():
     write_table('COMPARISONS.tsv',comparisons);write_table('COORDINATES.tsv',coordrows)
     write_table('EIGENVALUES.tsv',[{'arm':name,'component':i+1,'eigenvalue':float(v)} for name in names for i,v in enumerate(values[name])])
     print(json.dumps({'status':result['status'],'comparisons':comparisons},indent=2))
-if __name__=='__main__':main()
+
+def configure(config, base):
+    from _population_cli import path_value, require_directory, fresh_output
+    global PRIVATE, OUT, PLINK_ROOT
+    PRIVATE = require_directory(path_value(config, 'run_root', base))
+    PLINK_ROOT = require_directory(path_value(config, 'plink_root', base))
+    OUT = fresh_output(path_value(config, 'outdir', base), [PRIVATE, PLINK_ROOT])
+
+
+def preflight():
+    from _population_cli import report_plan
+    receipt = json.loads((PRIVATE / 'RUN_RECEIPT.json').read_text())
+    assert receipt['status'] == 'COMPLETED_PENDING_ROOT_SCIENTIFIC_AUDIT'
+    assert receipt['selected_sites'] == 37566 and len(receipt['arms']) == 12
+    required_arms = {rep + '_r' + str(rank) for rep in ('B_HC_e1e6', 'C_PL', 'B_HC_e1e4', 'B_official_HC_e1e6') for rank in (2, 1, 3)}
+    if set(receipt['arms']) != required_arms:
+        raise ValueError('The twelve fixed representation/rank arms are required')
+    bound_outputs = {item['path'] for item in receipt['output_files']}
+    if not {name + '.npz' for name in required_arms} <= bound_outputs:
+        raise ValueError('Covariance arrays are missing from the fit receipt bindings')
+    for item in receipt['output_files']:
+        assert sha(PRIVATE / item['path']) == item['sha256']
+    plink = json.loads((PLINK_ROOT / 'RECEIPT.json').read_text())
+    assert plink['status'] == 'COMPLETED_PENDING_INDEPENDENT_AUDIT'
+    if not {'pca.rel', 'pca.eigenvec', 'pca.eigenval'} <= {item['path'] for item in plink['outputs']}:
+        raise ValueError('PLINK numerical outputs lack receipt bindings')
+    for item in plink['outputs']:
+        assert sha(PLINK_ROOT / item['path']) == item['sha256']
+    inputs = {'fit_receipt': PRIVATE / 'RUN_RECEIPT.json', 'plink_receipt': PLINK_ROOT / 'RECEIPT.json', **{'fit:' + item['path']: PRIVATE / item['path'] for item in receipt['output_files']}, **{'plink:' + item['path']: PLINK_ROOT / item['path'] for item in plink['outputs']}}
+    return report_plan('compare_full_panel.py', inputs,
+                       {name: OUT / name for name in ['COMPARISON.json', 'COMPARISONS.tsv', 'COORDINATES.tsv', 'EIGENVALUES.tsv']}, ['numpy', 'scipy'])
+
+
+def plan(config_path):
+    """Return a read-only, JSON-compatible artifact and dependency plan."""
+    config_path=Path(config_path).resolve();config=json.loads(config_path.read_text());configure(config,config_path.parent);return preflight()
+
+
+def main(argv=None):
+    from _population_cli import read_config
+    config, base, run = read_config(__doc__, argv)
+    configure(config, base)
+    print(json.dumps(preflight(), indent=2))
+    if run:
+        execute()
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

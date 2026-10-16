@@ -1,0 +1,5 @@
+{
+  "run_root": "../../results_portable/full_panel",
+  "plink_root": "../../results_portable/plink",
+  "outdir": "../../results_portable/comparison"
+}

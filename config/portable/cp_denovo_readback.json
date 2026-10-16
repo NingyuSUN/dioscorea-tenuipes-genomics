@@ -1,0 +1,12 @@
+{
+  "out": "../../results_portable/chloroplast/validate_denovo_cp_reads",
+  "contigs": "../../data/portable/chloroplast/validate_denovo_cp_reads/contigs.fa",
+  "assembly_receipt": "../../data/portable/chloroplast/validate_denovo_cp_reads/assembly.json",
+  "screen": "../../data/portable/chloroplast/validate_denovo_cp_reads/screen.json",
+  "reads": [
+    "../../data/portable/chloroplast/validate_denovo_cp_reads/R1.fq.gz",
+    "../../data/portable/chloroplast/validate_denovo_cp_reads/R2.fq.gz"
+  ],
+  "minimap2": "../../tools/minimap2",
+  "samtools": "../../tools/samtools"
+}

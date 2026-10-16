@@ -1,0 +1,245 @@
+{
+  "baseline_commit": "58319f3a385ff764053160d7bc8d62b1ed02d876",
+  "scope": "22 historical entry points; AST counts describe structural preservation, not scientific validation.",
+  "scripts": [
+    {
+      "script": "scripts/research/chloroplast/historical/audit_hachi_nuclear_coverage.py",
+      "previous_public_sha256": "781c29ac133e28099cc823860d587be82b7c9ef291f2d0907b999eb39f63125e",
+      "current_sha256": "9704097f2d7ab5f6c437cd4ac9a765ea17cf7e4461e7c99c8ce64b6295327717",
+      "original_functions": 5,
+      "identical_named_function_ASTs": 4,
+      "changed_or_relocated_original_functions": [
+        "main"
+      ]
+    },
+    {
+      "script": "scripts/research/chloroplast/historical/compare_published_edo.py",
+      "previous_public_sha256": "ecdce8f27f7382bfc31bd31e445c949bcf0fb30cadd9424e5ab77600a34286ac",
+      "current_sha256": "077fbec70f108fb7cf89317b9f118469d111370b01220c3cab9266cb890c7e3c",
+      "original_functions": 0,
+      "identical_named_function_ASTs": 0,
+      "changed_or_relocated_original_functions": []
+    },
+    {
+      "script": "scripts/research/chloroplast/historical/prepare_inputs.py",
+      "previous_public_sha256": "dcd2b0e9ff3cc80d33da883057251c5e6b4e0a7e5d63daa13d53317baada03d5",
+      "current_sha256": "edb06a2530fa77c9d3dd0d6599547465e60e8a6b340534c23f3cbb1ae3d92f62",
+      "original_functions": 4,
+      "identical_named_function_ASTs": 3,
+      "changed_or_relocated_original_functions": [
+        "main"
+      ]
+    },
+    {
+      "script": "scripts/research/chloroplast/historical/prepare_source_inputs.py",
+      "previous_public_sha256": "328a3a4b8cab49ce06f1421c90f35b52616127a9caabb9a8c210923fb7ab0c72",
+      "current_sha256": "fa996741f263713151536aedcc6cd0091bdf0801a450043b2c4f1ca2a17067fd",
+      "original_functions": 1,
+      "identical_named_function_ASTs": 0,
+      "changed_or_relocated_original_functions": [
+        "main"
+      ]
+    },
+    {
+      "script": "scripts/research/chloroplast/historical/published_edo_controls.py",
+      "previous_public_sha256": "02a3ccd540f530463fd708bfb7ffdc24efbff7d23629bdc9e64ce2a9a68724ee",
+      "current_sha256": "44a5748ec9250359910436e2d41465d3321bce5e7514a0c758d1ae16d5be80ea",
+      "original_functions": 2,
+      "identical_named_function_ASTs": 1,
+      "changed_or_relocated_original_functions": [
+        "run"
+      ]
+    },
+    {
+      "script": "scripts/research/chloroplast/historical/run_cp97.py",
+      "previous_public_sha256": "9d8fbacadcc25d5519a75a6decee120cb74ebf24416064801e88a3a662312e01",
+      "current_sha256": "95b9af2416a957604f4968d10065ee9ef7396f53cc323c899f93ddb51e4e3ceb",
+      "original_functions": 19,
+      "identical_named_function_ASTs": 13,
+      "changed_or_relocated_original_functions": [
+        "verify_bundle",
+        "frozen_inputs",
+        "worker",
+        "supervise",
+        "main",
+        "stop_owned"
+      ]
+    },
+    {
+      "script": "scripts/research/chloroplast/historical/run_expanded_trees.py",
+      "previous_public_sha256": "5da397357b49f50616a4101cfa3ef1fa64c53f4cf11c549a9857fe832e0da195",
+      "current_sha256": "e121847669473324f50664818a0fbf6942649e621556d91714ea4cbbe42bb5d7",
+      "original_functions": 14,
+      "identical_named_function_ASTs": 13,
+      "changed_or_relocated_original_functions": [
+        "main"
+      ]
+    },
+    {
+      "script": "scripts/research/chloroplast/historical/validate_denovo_cp_reads.py",
+      "previous_public_sha256": "67aabe1d8df23998a84473cfa11a0b147763b1c5bbdd8830a7a3873d73d426aa",
+      "current_sha256": "3bc6c0f6ed371f7098802de2dda2af1fdc9cc8f510aaf410d893e7600d808a1a",
+      "original_functions": 5,
+      "identical_named_function_ASTs": 4,
+      "changed_or_relocated_original_functions": [
+        "run"
+      ]
+    },
+    {
+      "script": "scripts/research/chloroplast_ils/historical/make_report_figures.py",
+      "previous_public_sha256": "6898bcb6771c3b30c48cfcb6f96857b58c4c25d677045a22a4af858a5a774332",
+      "current_sha256": "ab415b438c8f48595e252819f166a704cf74de462b2dcd1e7600f9d3a39f600a",
+      "original_functions": 0,
+      "identical_named_function_ASTs": 0,
+      "changed_or_relocated_original_functions": []
+    },
+    {
+      "script": "scripts/research/chloroplast_ils/historical/prepare_inputs.py",
+      "previous_public_sha256": "48ec6e35fc405fca2218507f10a2b29c79f6df822edc1ad05b335bbb8dcc18ea",
+      "current_sha256": "d4500b9e35ae300106cfc911779c3ed03c70ebc18a3a7c010d585283b06f87df",
+      "original_functions": 5,
+      "identical_named_function_ASTs": 4,
+      "changed_or_relocated_original_functions": [
+        "save"
+      ]
+    },
+    {
+      "script": "scripts/research/nuclear/historical/genomic_cds_translation.py",
+      "previous_public_sha256": "faf8c214473182aa68b8d06972c3e3d925ca02e9ecb69fa29423e8629ed9b215",
+      "current_sha256": "778ec7db42613379e6e03dbb05ddf6bacf41be2686b552169819ae76163dcbf3",
+      "original_functions": 6,
+      "identical_named_function_ASTs": 5,
+      "changed_or_relocated_original_functions": [
+        "main"
+      ]
+    },
+    {
+      "script": "scripts/research/nuclear/historical/prepare_loci.py",
+      "previous_public_sha256": "fcd342a855f25d9819c7eccb48bf6f2b3241cfe4d0f22a16e59eb8480a09398a",
+      "current_sha256": "0ca876c6b6d3f24d0458f6646a54ef4d2552faf0252aa8cc2f2ab41b8e896b15",
+      "original_functions": 0,
+      "identical_named_function_ASTs": 0,
+      "changed_or_relocated_original_functions": []
+    },
+    {
+      "script": "scripts/research/nuclear/historical/recover_nuclear.py",
+      "previous_public_sha256": "64a8cc165c80b9f2a783f2ac06348364c2b1f8c376589dc5da2e983d73d1e716",
+      "current_sha256": "58f1e4d2b364f695e484536feb220e79bb767be6d93fe7d75e8b354dc5152aee",
+      "original_functions": 13,
+      "identical_named_function_ASTs": 12,
+      "changed_or_relocated_original_functions": [
+        "main"
+      ]
+    },
+    {
+      "script": "scripts/research/nuclear/historical/run_nuclear_main.py",
+      "previous_public_sha256": "221de9178c1dca9984668df3315aa1335dd50efe5dc95be9f083056003b638ff",
+      "current_sha256": "bb5b87a239ebe2749fd3140ef5fd4774d16036eeaa3cb8aac5cccc76006f6742",
+      "original_functions": 5,
+      "identical_named_function_ASTs": 4,
+      "changed_or_relocated_original_functions": [
+        "main"
+      ]
+    },
+    {
+      "script": "scripts/research/nuclear_ils/historical/audit_panel.py",
+      "previous_public_sha256": "df36eb7e21883dffc1d8eb59ca470d7e649ff1359a1d38035c4f6817e0821ed7",
+      "current_sha256": "1fdf87735c008f380f78ab512f753bcd384625835f272cfab25a150dc5ad89e1",
+      "original_functions": 21,
+      "identical_named_function_ASTs": 14,
+      "changed_or_relocated_original_functions": [
+        "sha",
+        "read",
+        "fasta",
+        "scope_check",
+        "execute",
+        "main",
+        "check"
+      ]
+    },
+    {
+      "script": "scripts/research/nuclear_ils/historical/fit_history.py",
+      "previous_public_sha256": "4f282e318e6f46bee7f5eb8f23764fef86d7e8fe21dc05d1ae9b2f816c9b6cd2",
+      "current_sha256": "edfdc05e24784447769dd80296a2db3f2237c87d8c93c3695ddf51d92f034907",
+      "original_functions": 33,
+      "identical_named_function_ASTs": 31,
+      "changed_or_relocated_original_functions": [
+        "bind_file",
+        "main"
+      ]
+    },
+    {
+      "script": "scripts/research/panthaica/historical/prepare_alignment_controls.py",
+      "previous_public_sha256": "f78e20d7898fa7b9392deeb70d77f02edd82ea3bdd06af67fff45402afc861ed",
+      "current_sha256": "f3b4a5895cecec8ce50a9ae473838296d9e815bd989e73ab1b6160f7999da978",
+      "original_functions": 16,
+      "identical_named_function_ASTs": 13,
+      "changed_or_relocated_original_functions": [
+        "task_path",
+        "execute",
+        "main"
+      ]
+    },
+    {
+      "script": "scripts/research/panthaica/historical/run_marker_recovery_draft.py",
+      "previous_public_sha256": "78daae47d9cdc292545677866b58b24882dfc4d0788c0829073ac7558e255ea5",
+      "current_sha256": "b8809db651ae5c3583d7b3df57807e6c99e16224b3f97d09c98dff1f7fa05e60",
+      "original_functions": 13,
+      "identical_named_function_ASTs": 9,
+      "changed_or_relocated_original_functions": [
+        "evidence",
+        "execute",
+        "main",
+        "stop"
+      ]
+    },
+    {
+      "script": "scripts/research/panthaica/historical/run_rna_pipeline_draft.py",
+      "previous_public_sha256": "b71cfbd9677a2f9052b9cf5951005fa54a04cc8ea731b9caf98ed2c9fdbf53f9",
+      "current_sha256": "1e1a7ee81c009e9c35ec11f05a7771b54ec84731755c1cf6e42381b150528fbb",
+      "original_functions": 21,
+      "identical_named_function_ASTs": 12,
+      "changed_or_relocated_original_functions": [
+        "bound",
+        "check_download",
+        "verify_raw_hashes",
+        "verify_raw_signature",
+        "resource_read",
+        "execute",
+        "main",
+        "stop",
+        "command"
+      ]
+    },
+    {
+      "script": "scripts/research/population/historical/compare_full_panel.py",
+      "previous_public_sha256": "d385e37b7d00ca59d25a3cae690ec9c488e6839c170a9279d93ae761f3e5e253",
+      "current_sha256": "d65efc13ed1bc4a1e39f7abaa11b61cbdb7c8223d168352616398af59de6228c",
+      "original_functions": 3,
+      "identical_named_function_ASTs": 2,
+      "changed_or_relocated_original_functions": [
+        "main"
+      ]
+    },
+    {
+      "script": "scripts/research/population/historical/run_full_panel.py",
+      "previous_public_sha256": "fa599bfe73a8cf5de5fb90710d12175a38854f5d43eb0bf5869d5d27cf9a2cd9",
+      "current_sha256": "a3397e60875e2ece4f5d70a24c64811fff3426297bdde098fee51e48a32325fe",
+      "original_functions": 24,
+      "identical_named_function_ASTs": 23,
+      "changed_or_relocated_original_functions": [
+        "run"
+      ]
+    },
+    {
+      "script": "scripts/research/population/historical/run_plink_arm.py",
+      "previous_public_sha256": "3fe13ec6b602bbb680429fa6729670621a7dd64191258ab1a5a43389b72973a8",
+      "current_sha256": "d8d15e0074e4fdec1b7f0de0c8f3e038601c5165245a0d520ea24c6a471bf647",
+      "original_functions": 2,
+      "identical_named_function_ASTs": 1,
+      "changed_or_relocated_original_functions": [
+        "main"
+      ]
+    }
+  ]
+}

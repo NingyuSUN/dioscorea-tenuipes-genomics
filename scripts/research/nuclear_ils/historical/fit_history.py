@@ -17,15 +17,19 @@ import re
 import sys
 import time
 
+try:
+    from .portable_inputs import Config, report, require_preflight
+except ImportError:
+    from portable_inputs import Config, report, require_preflight
+PORTABLE=None
+
 SCHEMA = 'dioscorea.conditional_s0.v1'
 AA = 'ARNDCQEGHILKMFPSTWYV'
-L = 'workspace/historical_research'
-REPO = 'workspace/projects/dioscorea-tenuipes-reference-genome'
 CONTRACT_SHA = 'b1e308c458636878d268a8d9b1ab83fee0236197991a58f530ba77eed4838fbf'
 SOURCE_PINS = {
- 'snapshot_manifest': (L+'/ils_forward_preparation/SOURCE_SNAPSHOT_MANIFEST.json', '24e07a9d548a4d063fefdffa8311acfe6e052131af445648c9a5f081c7e305c0'),
- 'locus_manifest': (REPO+'/docs/evidence/2026-09-29/research_p50/inputs/LOCUS_MANIFEST.json', '84c3fcd80ce9d021e03e2ee925f1dc9fc77f852757cd971683d0fb4fd3f0525d'),
- 'model_table': (L+'/ils_forward_preparation/PER_LOCUS_INPUT_CAPABILITY.tsv', '5b3b881ab39a3df05c4434c37502fff746ea830d978d0785f4d24aa194f06492')}
+ 'snapshot_manifest': ('snapshot_manifest', '24e07a9d548a4d063fefdffa8311acfe6e052131af445648c9a5f081c7e305c0'),
+ 'locus_manifest': ('locus_manifest', '84c3fcd80ce9d021e03e2ee925f1dc9fc77f852757cd971683d0fb4fd3f0525d'),
+ 'model_table': ('model_table', '5b3b881ab39a3df05c4434c37502fff746ea830d978d0785f4d24aa194f06492')}
 PROFILE_POINTS = 41
 NUMERIC = {'CU_starts': [0.1, 1., 3.], 'CU_bounds': [0.,10.],
  'CU_optimizer': 'L-BFGS-B', 'CU_maxiter': 2000, 'CU_ftol': 1e-12, 'CU_gtol': 1e-8,
@@ -158,7 +162,7 @@ def topology_edges(tree):
 
 
 def bind_file(path, expected, path_map):
-    actual = path_map.get(path, path)
+    actual = str(PORTABLE.resolve(path)) if PORTABLE is not None else path_map.get(path, path)
     if not isinstance(actual, str) or not Path(actual).is_absolute():
         raise ValueError('Nonabsolute path mapping')
     got = sha(actual)
@@ -547,35 +551,47 @@ def execute(data,out):
     return result
 
 
+
+def plan(config_path):
+    c=Config(config_path);out=c.path('output_dir')
+    inputs=[c.input('contract',CONTRACT_SHA)]+[c.input(k,v[1]) for k,v in SOURCE_PINS.items()]
+    if 'scope_receipt' in c.data.get('inputs',{}):inputs.append(c.input('scope_receipt'))
+    return {'script':'fit_history','inputs':inputs,
+      'outputs':[str(out/n) for n in ['SOURCE_BINDINGS.json','NUMERICAL_RULES.json','FIXED_SPECIES_TOPOLOGY.nwk','QUARTET_GENE_AUDIT.json','QUARTET_COUNTS.json','PER_GENE_QUARTETS.tsv.gz','CLOCK_PROFILE.json','CLOCK_PAIR_RESIDUALS.tsv','CLOCK_MISFIT.json','S0_FITTED.json','RECEIPT.json']],
+      'required_threads':1,'tools':{},'python_packages':['numpy','scipy'],
+      'transitive_inputs':'The snapshot manifest, locus manifest and contract bind the 173 alignments/reports/receipts, fixed tree, matrix and masks; explicit path_map/path_roots relocate their unchanged bytes',
+      'scientific_contract':'12 taxa / 173 loci / 68796 columns; unchanged optimizers and bounds; 4 GiB, no swap, exactly one CPU; no simulation'}
+
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--contract',required=True);p.add_argument('--out',required=True)
-    p.add_argument('--path-map',help='JSON object of exact original absolute path to absolute actual path; all SHA remain mandatory')
-    p.add_argument('--scope-receipt');p.add_argument('--execute',action='store_true');a=p.parse_args()
-    # Guard before data loading or optimizer dependency import. Setting thread env cannot replace actual affinity.
-    resource_guard=guard(a.scope_receipt) if a.execute else None
+    global PORTABLE,SOURCE_PINS,CONTRACT_SHA
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--config',required=True,type=Path);p.add_argument('--execute',action='store_true');a=p.parse_args()
+    PORTABLE=Config(a.config);spec=plan(a.config)
+    if not a.execute:return report(spec)
+    require_preflight(spec)
+    row=PORTABLE.input('contract',CONTRACT_SHA);a.contract=row['path'];CONTRACT_SHA=row['sha256']
+    SOURCE_PINS={k:(PORTABLE.input(k,v[1])['path'],PORTABLE.input(k,v[1])['sha256']) for k,v in SOURCE_PINS.items()}
+    a.scope_receipt=PORTABLE.input('scope_receipt')['path']
+    resource_guard=guard(a.scope_receipt)
     for key in ['OMP_NUM_THREADS','OPENBLAS_NUM_THREADS','MKL_NUM_THREADS','NUMEXPR_NUM_THREADS']:os.environ[key]='1'
-    out=Path(a.out).absolute();out.mkdir(parents=True,exist_ok=False);started=time.time()
+    # Validate the immutable source graph before creating any output directory.
+    contract=json.loads(Path(a.contract).read_text());data=bind_sources(contract,{})
+    out=PORTABLE.path('output_dir');out.mkdir(parents=True,exist_ok=False);started=time.time()
     try:
-        if sha(a.contract)!=CONTRACT_SHA:raise ValueError('Frozen contract SHA mismatch')
-        contract=json.loads(Path(a.contract).read_text());path_map=json.loads(Path(a.path_map).read_text()) if a.path_map else {}
-        if not isinstance(path_map,dict) or any(not isinstance(k,str) or not isinstance(v,str) or not Path(k).is_absolute() or not Path(v).is_absolute() for k,v in path_map.items()):raise ValueError('Invalid exact path map')
-        data=bind_sources(contract,path_map)
         save(out/'SOURCE_BINDINGS.json',data['source_bindings']);save(out/'NUMERICAL_RULES.json',NUMERIC)
         with open(out/'FIXED_SPECIES_TOPOLOGY.nwk','x') as f:f.write(data['species_newick']+'\n')
         base={'schema_version':SCHEMA,'scenario':'S0','status':'CHECKED_NOT_FITTED','taxa':data['taxa'],
           'source_manifest_hashes':dict(data['source_manifest_hashes'],contract=CONTRACT_SHA,source_bindings=sha(out/'SOURCE_BINDINGS.json')),
-          'contract_path':str(Path(a.contract).absolute()),'path_map_sha256':sha(a.path_map) if a.path_map else None,
+          'contract_path':str(Path(a.contract)),'portable_config_sha256':sha(a.config),
           'implementation_sha256':sha(__file__),'numerical_rules_sha256':sha(out/'NUMERICAL_RULES.json'),
           'gene_entries':data['gene_entries'],'rooted_population_nodes':None,'kappa':None,'gene_relative_rates':None,
           'simulation_admissibility':{'structural_parameter_checks_passed':False,'reason':'not fitted; no simulation authority'}}
-        if a.execute:base.update(execute(data,out))
-        save(out/('S0_FITTED.json' if a.execute else 'CHECKED_PLAN.json'),base)
+        base.update(execute(data,out));save(out/'S0_FITTED.json',base)
         import resource
-        save(out/'RECEIPT.json',{'status':'COMPLETE','mode':'fit' if a.execute else 'source_checks_only',
-          'elapsed_seconds':time.time()-started,'maxrss_KiB_linux':resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+        save(out/'RECEIPT.json',{'status':'COMPLETE','mode':'fit','elapsed_seconds':time.time()-started,
+          'maxrss_KiB_linux':resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
           'guard':resource_guard,'argv':sys.argv,'actual_simulation_performed':False})
     except Exception as e:
-        save(out/'FAILURE.json',{'status':'STOPPED','error':repr(e),'elapsed_seconds':time.time()-started,'no_automatic_retry':True})
-        raise
+        save(out/'FAILURE.json',{'status':'STOPPED','error':repr(e),'elapsed_seconds':time.time()-started,'no_automatic_retry':True});raise
+    return 0
 
-if __name__=='__main__':main()
+if __name__=='__main__':raise SystemExit(main())

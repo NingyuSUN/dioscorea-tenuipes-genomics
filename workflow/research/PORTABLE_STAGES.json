@@ -1,0 +1,403 @@
+{
+  "schema": "dioscorea.portable-stage-catalog.v1",
+  "script_count": 22,
+  "configuration_count": 24,
+  "default_mode": "Read-only preflight; --execute is required for computation.",
+  "configuration_path_base": "The directory containing the selected JSON configuration.",
+  "example_inputs": "Required verified external data and tools are not bundled. All-zero hashes are explicit unfilled review fields and must never be accepted as evidence.",
+  "stages": [
+    {
+      "id": "population_full_panel",
+      "script": "scripts/research/population/historical/run_full_panel.py",
+      "example_config": "config/portable/population_full_panel.json",
+      "purpose": "Fit and compare fixed-dimensional genotype-likelihood covariance models on the full SNP panel.",
+      "dependencies": [
+        "numpy",
+        "PCAngsd",
+        "bundled explicit3.py"
+      ],
+      "limitations": [
+        "Fixed 37566 sites and 14 samples, all ranks/settings/likelihood/identity checks retained.",
+        "Full real-data execution requires the matching extraction receipts and a reviewed updated runner hash.",
+        "No compatible PCAngsd runtime is installed in the validation environment; tests use import-only synthetic module markers and never fit models.",
+        "Return code 2 denotes retained partial/nonconverged fits; downstream complete-fit comparison must not proceed.",
+        "The CLI caps OMP/OpenBLAS/MKL/NumExpr/vecLib/BLIS native numerical threads at one before library import."
+      ],
+      "required_threads": 1
+    },
+    {
+      "id": "population_plink",
+      "script": "scripts/research/population/historical/run_plink_arm.py",
+      "example_config": "config/portable/population_plink.json",
+      "purpose": "Compute the hard-call PLINK comparison arm for the same population panel.",
+      "dependencies": [
+        "PLINK 1.x"
+      ],
+      "limitations": [
+        "The 37566-site / 14-sample assertions and original options remain fixed.",
+        "The all-zero example digest is a placeholder that deliberately fails; replace with the reviewed executable digest."
+      ],
+      "required_threads": 2
+    },
+    {
+      "id": "population_comparison",
+      "script": "scripts/research/population/historical/compare_full_panel.py",
+      "example_config": "config/portable/population_comparison.json",
+      "purpose": "Summarize covariance and subspace differences across fixed-panel model arms.",
+      "dependencies": [
+        "numpy",
+        "scipy"
+      ],
+      "limitations": [
+        "Descriptive comparison only; shared samples are not independent pairwise observations.",
+        "Partial fits are rejected.",
+        "The CLI caps OMP/OpenBLAS/MKL/NumExpr/vecLib/BLIS native numerical threads at one before library import."
+      ],
+      "required_threads": 1
+    },
+    {
+      "id": "nuclear_recovery",
+      "script": "scripts/research/nuclear/historical/recover_nuclear.py",
+      "example_config": "config/portable/nuclear_recovery.json",
+      "purpose": "Recover BUSCO nuclear markers from the selected genome assembly.",
+      "dependencies": [
+        "MEGAHIT",
+        "BUSCO",
+        "offline embryophyta_odb10 lineage"
+      ],
+      "limitations": [
+        "Produces candidate assembly/BUSCO evidence; does not admit markers or establish orthology.",
+        "Existing explicit CLI flags remain supported; config values resolve beside the JSON."
+      ],
+      "required_threads": 8
+    },
+    {
+      "id": "nuclear_main",
+      "script": "scripts/research/nuclear/historical/run_nuclear_main.py",
+      "example_config": "config/portable/nuclear_main.json",
+      "purpose": "Coordinate the historical expanded nuclear panel and concatenated IQ-TREE analysis.",
+      "dependencies": [
+        "biopython",
+        "BUSCO",
+        "MAFFT",
+        "IQ-TREE",
+        "Linux fcntl",
+        "unchanged nuclear/build_busco_matrices.py and audit_miniprot_stops.py"
+      ],
+      "limitations": [
+        "Requires a complete curated taxa list; recovery of one taxon does not construct the entire source panel.",
+        "Consumed external BUSCO files are staged and hash-checked before the unchanged builder, preventing its audit sidecar from modifying inputs.",
+        "Original gene-selection thresholds, exclusion 2661at3193, seed 20260928 and 1000 bootstrap/alrt replicates are retained."
+      ],
+      "required_threads": 8
+    },
+    {
+      "id": "nuclear_loci",
+      "script": "scripts/research/nuclear/historical/prepare_loci.py",
+      "example_config": "config/portable/nuclear_loci.json",
+      "purpose": "Split the frozen concatenated matrix into loci while omitting all-missing taxon rows.",
+      "dependencies": [
+        "biopython"
+      ],
+      "limitations": [
+        "Fixed 173 loci and 68796 columns remain admission requirements; a newly rebuilt matrix with different dimensions is rejected.",
+        "Downstream existing nuclear/run_loci.py consumes this output root, then gene_concordance.py consumes the locus-tree outputs.",
+        "The example digest must be replaced explicitly; no hash check is disabled or automatically rebound."
+      ],
+      "required_threads": 1
+    },
+    {
+      "id": "nuclear_translation",
+      "script": "scripts/research/nuclear/historical/genomic_cds_translation.py",
+      "example_config": "config/portable/nuclear_translation.json",
+      "purpose": "Verify genomic CDS translation and marker binding for the hime2 reference.",
+      "dependencies": [
+        "Linux cgroup v2 and CPU affinity",
+        "Python standard library"
+      ],
+      "limitations": [
+        "Execution retains <=1 GiB effective memory, swap=0 and one-CPU constraints. Preflight validates inputs; the runtime resource guard is enforced on execution.",
+        "This step translates existing coordinates only; it does not generate or authenticate the upstream alignment."
+      ],
+      "required_threads": 1
+    },
+    {
+      "id": "cp_prepare_matrices",
+      "script": "scripts/research/chloroplast/historical/prepare_inputs.py",
+      "example_config": "config/portable/cp_prepare_matrices.json",
+      "purpose": "Prepare the historical paired chloroplast matrix and partition-model controls.",
+      "dependencies": [
+        "iqtree",
+        "Python standard library"
+      ],
+      "limitations": [
+        "Requires the fixed input panel, matching provenance receipts and reviewed tool versions; configuration does not relax identity or hash checks."
+      ],
+      "required_threads": 1
+    },
+    {
+      "id": "cp_prepare_source_au",
+      "script": "scripts/research/chloroplast/historical/prepare_source_inputs.py",
+      "example_config": "config/portable/cp_prepare_source_au.json",
+      "purpose": "Prepare fixed-column chloroplast source variants for paired AU comparisons.",
+      "dependencies": [
+        "iqtree",
+        "Python standard library"
+      ],
+      "limitations": [
+        "Requires the fixed input panel, matching provenance receipts and reviewed tool versions; configuration does not relax identity or hash checks."
+      ],
+      "required_threads": 1
+    },
+    {
+      "id": "cp_hachi_coverage",
+      "script": "scripts/research/chloroplast/historical/audit_hachi_nuclear_coverage.py",
+      "example_config": "config/portable/cp_hachi_coverage.json",
+      "purpose": "Measure nuclear-marker read coverage for the Hachi sample.",
+      "dependencies": [
+        "minimap2",
+        "samtools",
+        "Python standard library"
+      ],
+      "limitations": [
+        "Requires the fixed input panel, matching provenance receipts and reviewed tool versions; configuration does not relax identity or hash checks."
+      ],
+      "required_threads": 8
+    },
+    {
+      "id": "cp_edo_comparison",
+      "script": "scripts/research/chloroplast/historical/compare_published_edo.py",
+      "example_config": "config/portable/cp_edo_comparison.json",
+      "purpose": "Compare the published Edo plastome with read-supported chloroplast states.",
+      "dependencies": [
+        "Python standard library"
+      ],
+      "limitations": [
+        "Requires the fixed input panel, matching provenance receipts and reviewed tool versions; configuration does not relax identity or hash checks."
+      ],
+      "required_threads": 1
+    },
+    {
+      "id": "cp_edo_controls",
+      "script": "scripts/research/chloroplast/historical/published_edo_controls.py",
+      "example_config": "config/portable/cp_edo_controls.json",
+      "purpose": "Evaluate source and callable-site controls for the published Edo plastome.",
+      "dependencies": [
+        "Python standard library"
+      ],
+      "limitations": [
+        "Requires the fixed input panel, matching provenance receipts and reviewed tool versions; configuration does not relax identity or hash checks."
+      ],
+      "required_threads": 1
+    },
+    {
+      "id": "cp_denovo_readback",
+      "script": "scripts/research/chloroplast/historical/validate_denovo_cp_reads.py",
+      "example_config": "config/portable/cp_denovo_readback.json",
+      "purpose": "Validate de novo chloroplast contigs against paired read evidence.",
+      "dependencies": [
+        "minimap2",
+        "samtools",
+        "Python standard library"
+      ],
+      "limitations": [
+        "Requires the fixed input panel, matching provenance receipts and reviewed tool versions; configuration does not relax identity or hash checks."
+      ],
+      "required_threads": 8
+    },
+    {
+      "id": "cp_expanded_trees",
+      "script": "scripts/research/chloroplast/historical/run_expanded_trees.py",
+      "example_config": "config/portable/cp_expanded_trees.json",
+      "purpose": "Execute the historical expanded 98-tip chloroplast comparison on admitted fixed-column matrices.",
+      "dependencies": [
+        "python",
+        "loginctl",
+        "iqtree",
+        "Python standard library"
+      ],
+      "limitations": [
+        "Requires the fixed input panel, matching provenance receipts and reviewed tool versions; configuration does not relax identity or hash checks.",
+        "Set latest_new_stage_start to the reviewed run deadline before execution.",
+        "Provide the complete entry configuration, source-profile receipts and program freeze; no source data are included.",
+        "CPU affinity and memory gates are explicit historical requirements; verify the configured host allocation."
+      ],
+      "required_threads": 4
+    },
+    {
+      "id": "cp97_tree",
+      "script": "scripts/research/chloroplast/historical/run_cp97.py",
+      "example_config": "config/portable/cp97_tree.json",
+      "purpose": "Evaluate the historical chloroplast topology after removing the Hachi tip.",
+      "dependencies": [
+        "python",
+        "systemd_run",
+        "systemctl",
+        "taskset",
+        "timeout",
+        "iqtree",
+        "Python standard library"
+      ],
+      "limitations": [
+        "Requires the fixed input panel, matching provenance receipts and reviewed tool versions; configuration does not relax identity or hash checks.",
+        "original_argv is immutable provenance from the archived successful 98-tip run; execution relocates executable, alignment, partition and output prefix separately.",
+        "Supply the exact old_runtime and program-freeze evidence. This is a frozen 98-minus-Hachi comparison, not a generic tree launcher."
+      ],
+      "required_threads": 4
+    },
+    {
+      "id": "panthaica_rna_qc",
+      "script": "scripts/research/panthaica/historical/run_rna_pipeline_draft.py",
+      "example_config": "config/portable/panthaica_rna_qc.json",
+      "purpose": "Perform the historical RNA read-QC and transcriptome-assembly stages.",
+      "dependencies": [
+        "Python standard library",
+        "cutadapt",
+        "rnaSPAdes 4.3.0",
+        "Linux systemd and cgroup v2"
+      ],
+      "limitations": [
+        "CRR515167: 28665951 pairs; fixed MD5/size binding, prefix pilot never formal marker input",
+        "External archived receipts may reference additional data. Supply their verified files and explicit path mappings; the workflow checks the preflight dependency declaration before execution."
+      ],
+      "required_threads": 1,
+      "phase_configs": {
+        "qc": "config/portable/panthaica_rna_qc.json",
+        "pilot": "config/portable/panthaica_rna_pilot.json",
+        "full": "config/portable/panthaica_rna_full.json"
+      },
+      "phase_required_threads": {
+        "qc": 1,
+        "pilot": 4,
+        "full": 4
+      }
+    },
+    {
+      "id": "panthaica_marker",
+      "script": "scripts/research/panthaica/historical/run_marker_recovery_draft.py",
+      "example_config": "config/portable/panthaica_marker.json",
+      "purpose": "Recover BUSCO markers from the assembled panthaica transcriptome.",
+      "dependencies": [
+        "Bio",
+        "busco",
+        "busco_python",
+        "metaeuk",
+        "systemd_run",
+        "systemctl",
+        "time"
+      ],
+      "limitations": [
+        "173 fixed markers; 1614 BUSCO statuses; full-read assembly only; 4 CPUs / 8 GiB / no swap",
+        "External archived receipts may reference additional data. Supply their verified files and explicit path mappings; the workflow checks the preflight dependency declaration before execution."
+      ],
+      "required_threads": 4
+    },
+    {
+      "id": "panthaica_alignment",
+      "script": "scripts/research/panthaica/historical/prepare_alignment_controls.py",
+      "example_config": "config/portable/panthaica_alignment.json",
+      "purpose": "Add panthaica to frozen nuclear profiles and construct matched-column controls.",
+      "dependencies": [
+        "mafft"
+      ],
+      "limitations": [
+        "12 old taxa, fixed 173 loci; keeplength/mapout; 50% locus coverage; old sequence bytes preserved; no tree inference",
+        "External archived receipts may reference additional data. Supply their verified files and explicit path mappings; the workflow checks the preflight dependency declaration before execution.",
+        "Marker recovery does not automatically establish orthology; the fixed panel evidence and matched-column audit remain required."
+      ],
+      "required_threads": 1
+    },
+    {
+      "id": "nuclear_fit",
+      "script": "scripts/research/nuclear_ils/historical/fit_history.py",
+      "example_config": "config/portable/nuclear_fit.json",
+      "purpose": "Fit a fixed conditional species-history scenario to the retained nuclear evidence.",
+      "dependencies": [
+        "numpy",
+        "scipy"
+      ],
+      "limitations": [
+        "12 taxa / 173 loci / 68796 columns; unchanged optimizers and bounds; 4 GiB, no swap, exactly one CPU; no simulation",
+        "External archived receipts may reference additional data. Supply their verified files and explicit path mappings; the workflow checks the preflight dependency declaration before execution."
+      ],
+      "required_threads": 1
+    },
+    {
+      "id": "nuclear_audit",
+      "script": "scripts/research/nuclear_ils/historical/audit_panel.py",
+      "example_config": "config/portable/nuclear_audit.json",
+      "purpose": "Audit conditional simulation manifests, generated alignments and inference jobs.",
+      "dependencies": [
+        "tskit"
+      ],
+      "limitations": [
+        "Completed 173-gene / 173000-bootstrap-tree panel only; fixed seed and hash bindings; audit 2 GiB / no swap / one configured CPU / 600 seconds; no jobs launched",
+        "External archived receipts may reference additional data. Supply their verified files and explicit path mappings; the workflow checks the preflight dependency declaration before execution.",
+        "Recounts the completed historical 173-locus / 173000-bootstrap panel; not a general audit for arbitrary new simulations."
+      ],
+      "required_threads": 1
+    },
+    {
+      "id": "chloroplast_prepare",
+      "script": "scripts/research/chloroplast_ils/historical/prepare_inputs.py",
+      "example_config": "config/portable/chloroplast_prepare.json",
+      "purpose": "Prepare the frozen nuclear guide and observed chloroplast quartet/distance inputs.",
+      "dependencies": [],
+      "limitations": [
+        "Frozen 98 sequences x 124448 columns; hash-bound tree sources; no simulation",
+        "External archived receipts may reference additional data. Supply their verified files and explicit path mappings; the workflow checks the preflight dependency declaration before execution."
+      ],
+      "required_threads": 1
+    },
+    {
+      "id": "chloroplast_figures",
+      "script": "scripts/research/chloroplast_ils/historical/make_report_figures.py",
+      "example_config": "config/portable/chloroplast_figures.json",
+      "purpose": "Plot conditional plastid topology and distance-scenario summaries.",
+      "dependencies": [
+        "numpy",
+        "matplotlib"
+      ],
+      "limitations": [
+        "Render precomputed tables only; no simulation or inference",
+        "External archived receipts may reference additional data. Supply their verified files and explicit path mappings; the workflow checks the preflight dependency declaration before execution.",
+        "Requires independently validated simulation summary tables; input preparation alone does not produce them."
+      ],
+      "required_threads": 1
+    }
+  ],
+  "workflow_templates": [
+    "config/portable/population_chain.json",
+    "config/portable/nuclear_preparation_chain.json",
+    "config/portable/chloroplast_edo_chain.json",
+    "config/portable/nuclear_chloroplast_ils_chain.json",
+    "config/portable/panthaica_chain.json",
+    "config/portable/all_stages.json"
+  ],
+  "tracked_helpers": [
+    {
+      "path": "scripts/research/chloroplast/historical/portable_cli.py",
+      "sha256": "31cd3fcb406d6312767919471f6d34dddda9e57a07cf318808db52095548da57"
+    },
+    {
+      "path": "scripts/research/chloroplast_ils/historical/portable_inputs.py",
+      "sha256": "7e9f3160d60bccda1099628ac500504e818295569808586d5b5ff91b24de7a2a"
+    },
+    {
+      "path": "scripts/research/nuclear/historical/_nuclear_cli.py",
+      "sha256": "7e3ce4fb0dfe2e9850582a015d534fbc0f17a70b9fb64ac24a72ce4f1b0dda83"
+    },
+    {
+      "path": "scripts/research/nuclear_ils/historical/portable_inputs.py",
+      "sha256": "7e9f3160d60bccda1099628ac500504e818295569808586d5b5ff91b24de7a2a"
+    },
+    {
+      "path": "scripts/research/panthaica/historical/portable_inputs.py",
+      "sha256": "7e9f3160d60bccda1099628ac500504e818295569808586d5b5ff91b24de7a2a"
+    },
+    {
+      "path": "scripts/research/population/historical/_population_cli.py",
+      "sha256": "7e3ce4fb0dfe2e9850582a015d534fbc0f17a70b9fb64ac24a72ce4f1b0dda83"
+    }
+  ]
+}

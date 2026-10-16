@@ -1,5 +1,7 @@
 # Public code update — 2026-10-16
 
+This record describes release `58319f3`. The subsequent [portability update](PORTABLE_SCRIPTS_2026-10-16.md) supersedes its statement about 22 historical-only entry points; the original release evidence below is retained.
+
 This release adds later-analysis source code, selected Snakemake wrappers, a complete script-purpose catalogue, recorded software versions, and three pipeline diagrams. No research dataset was reanalysed and no simulation or phylogenetic inference was rerun for the release.
 
 ## Content

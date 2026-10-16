@@ -38,3 +38,8 @@ jobs:
 
       - name: Later-analysis DAG and staging guards (no analysis)
         run: python workflow/tests/research_dryrun.py
+
+      - name: Portable historical entry-point checks (no analysis)
+        run: |
+          python workflow/tests/portable_checks.py
+          python workflow/tests/portable_dryrun.py

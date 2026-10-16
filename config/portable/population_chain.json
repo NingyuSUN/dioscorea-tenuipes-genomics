@@ -1,0 +1,102 @@
+{
+  "receipts": "../../results_portable/workflow_receipts/population_chain",
+  "frozen_dirs": [
+    "../../data/portable",
+    "../../tools"
+  ],
+  "stages": {
+    "population_full_panel": {
+      "script": "scripts/research/population/historical/run_full_panel.py",
+      "config": "population_full_panel.json",
+      "inputs": [
+        "../../data/portable/population_sources/full_panel_plan.json"
+      ],
+      "outputs": [
+        "../../results_portable/full_panel/RUN_RECEIPT.json",
+        "../../results_portable/full_panel/paired.bed",
+        "../../results_portable/full_panel/paired.bim",
+        "../../results_portable/full_panel/paired.fam",
+        "../../results_portable/full_panel/B_HC_e1e6_r2.npz",
+        "../../results_portable/full_panel/B_HC_e1e6_r1.npz",
+        "../../results_portable/full_panel/B_HC_e1e6_r3.npz",
+        "../../results_portable/full_panel/C_PL_r2.npz",
+        "../../results_portable/full_panel/C_PL_r1.npz",
+        "../../results_portable/full_panel/C_PL_r3.npz",
+        "../../results_portable/full_panel/B_HC_e1e4_r2.npz",
+        "../../results_portable/full_panel/B_HC_e1e4_r1.npz",
+        "../../results_portable/full_panel/B_HC_e1e4_r3.npz",
+        "../../results_portable/full_panel/B_official_HC_e1e6_r2.npz",
+        "../../results_portable/full_panel/B_official_HC_e1e6_r1.npz",
+        "../../results_portable/full_panel/B_official_HC_e1e6_r3.npz"
+      ],
+      "after": [],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [
+        "../../data/portable/population_sources",
+        "../../tools/pcangsd"
+      ],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/full_panel"
+      ]
+    },
+    "population_plink": {
+      "script": "scripts/research/population/historical/run_plink_arm.py",
+      "config": "population_plink.json",
+      "inputs": [
+        "../../results_portable/full_panel/RUN_RECEIPT.json",
+        "../../results_portable/full_panel/paired.bed",
+        "../../results_portable/full_panel/paired.bim",
+        "../../results_portable/full_panel/paired.fam"
+      ],
+      "outputs": [
+        "../../results_portable/plink/RECEIPT.json",
+        "../../results_portable/plink/pca.rel",
+        "../../results_portable/plink/pca.eigenvec",
+        "../../results_portable/plink/pca.eigenval",
+        "../../results_portable/plink/pca.log"
+      ],
+      "after": [
+        "population_full_panel"
+      ],
+      "threads": 2,
+      "tools": [
+        "../../tools/plink"
+      ],
+      "input_directories": [],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/plink"
+      ]
+    },
+    "population_comparison": {
+      "script": "scripts/research/population/historical/compare_full_panel.py",
+      "config": "population_comparison.json",
+      "inputs": [
+        "../../results_portable/full_panel/RUN_RECEIPT.json",
+        "../../results_portable/plink/RECEIPT.json"
+      ],
+      "outputs": [
+        "../../results_portable/comparison/COMPARISON.json",
+        "../../results_portable/comparison/COMPARISONS.tsv",
+        "../../results_portable/comparison/COORDINATES.tsv",
+        "../../results_portable/comparison/EIGENVALUES.tsv"
+      ],
+      "after": [
+        "population_full_panel",
+        "population_plink"
+      ],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [
+        "../../results_portable/full_panel",
+        "../../results_portable/plink"
+      ],
+      "output_directories": [
+        "../../results_portable/comparison"
+      ]
+    }
+  }
+}

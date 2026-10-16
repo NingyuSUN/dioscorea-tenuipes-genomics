@@ -1,0 +1,42 @@
+{
+  "paths": {
+    "root": "../../results_portable/panthaica",
+    "run_dir": "../../results_portable/panthaica/marker_recovery_configured"
+  },
+  "inputs": {
+    "marker_evidence": {
+      "path": "metadata/MARKER_READINESS_EVIDENCE.json",
+      "sha256": "a954b6987f3c28d8b6433132c45c621a4c0a9055bf28af1fc433304d0debae3a",
+      "original_sha256": "de212e8f6f5502f5d75e68f8d509433c7c9e9cc6638cae304b6ce16ef456d660",
+      "metadata_migration": {
+        "path": "metadata/METADATA_MIGRATION.json",
+        "sha256": "7be628227a459f24eb00f6e647c3c3ed97facb70d28545dda208b54140678108"
+      }
+    },
+    "transcripts": {
+      "path": "../../results_portable/panthaica/assembly/full_configured/rnaspades/transcripts.fasta"
+    },
+    "assembly_receipt": {
+      "path": "../../results_portable/panthaica/assembly/full_configured/ASSEMBLY_RECEIPT.json"
+    },
+    "download_receipt": {
+      "path": "../../data/portable/panthaica/DOWNLOAD_RECEIPT.json"
+    }
+  },
+  "tools": {
+    "busco": "../../tools/busco/bin/busco",
+    "busco_python": "../../tools/busco/bin/python",
+    "metaeuk": "../../tools/busco/bin/metaeuk",
+    "systemd_run": "../../tools/systemd-run",
+    "systemctl": "../../tools/systemctl",
+    "time": "../../tools/time"
+  },
+  "path_map": {},
+  "path_roots": {
+    "tools": "../../tools/",
+    "inputs": "../../data/portable/",
+    "evidence": "../../data/portable/panthaica/",
+    "panthaica": "../../results_portable/panthaica",
+    "nuclear": "../../data/portable/nuclear_ils"
+  }
+}

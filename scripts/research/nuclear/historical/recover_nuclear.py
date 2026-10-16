@@ -5,6 +5,12 @@ phylogeny, admits no markers, and makes no scientific acceptance claim (see NOTE
 import argparse, hashlib, json, os, subprocess, sys
 from datetime import datetime, timezone
 from pathlib import Path
+import sys
+if not __debug__:
+    raise RuntimeError('Optimized Python disables required scientific assertions; run without -O.')
+_HELPER_DIR = str(Path(__file__).resolve().parent)
+if _HELPER_DIR not in sys.path:
+    sys.path.insert(0, _HELPER_DIR)
 
 INVARIANTS = [
     "raw reads are never modified; only hashed once and size/mtime_ns-snapshotted before/after",
@@ -102,16 +108,7 @@ def fasta_stats(fa):
     if st["ge_500bp"] == 0: raise ValueError("no contigs >= 500 bp")
     return st
 
-def main():
-    ap = argparse.ArgumentParser(description=__doc__)
-    for opt in ("--work-root", "--r1", "--r2", "--download-receipt", "--qc-receipt", "--megahit",
-                "--busco-python", "--busco-script", "--lineage", "--download-path"):
-        ap.add_argument(opt, required=True)
-    ap.add_argument("--busco-pythonpath", default=None, help="optional patched-package parent to prepend to PYTHONPATH")
-    ap.add_argument("--taxon-label", required=True); ap.add_argument("--run-accession", required=True)
-    ap.add_argument("--threads", type=int, default=8); ap.add_argument("--memory-bytes", type=int, default=24_000_000_000)
-    ap.add_argument("--execute", action="store_true", help="actually run MEGAHIT/BUSCO; default is dry-run planning")
-    a = ap.parse_args()
+def execute_recovery(a):
     work = Path(a.work_root)
     if work.exists(): sys.exit(f"ERROR: --work-root must not already exist: {work}")
     work.mkdir(parents=True, exist_ok=False)  # fresh directory is the duplicate-run guard (no fcntl; portable)
@@ -190,5 +187,83 @@ def main():
         R.stage(R.receipt["stage"], "FAILED")
         print(f"FAILED at stage {R.receipt['stage']}: {R.receipt['error']} (receipt: {R.path})", file=sys.stderr); sys.exit(1)
 
-if __name__ == "__main__":
-    main()
+
+def parse_arguments(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument('--config', type=Path, help='JSON config; relative paths resolve beside this file')
+    path_keys = ('work_root', 'r1', 'r2', 'download_receipt', 'qc_receipt', 'megahit',
+                 'busco_python', 'busco_script', 'lineage', 'download_path', 'busco_pythonpath')
+    for key in path_keys:
+        ap.add_argument('--' + key.replace('_', '-'))
+    for key in ('taxon_label', 'run_accession'):
+        ap.add_argument('--' + key.replace('_', '-'))
+    ap.add_argument('--threads', type=int)
+    ap.add_argument('--memory-bytes', type=int)
+    ap.add_argument('--execute', action='store_true', help='Run MEGAHIT and BUSCO; default is read-only preflight')
+    a = ap.parse_args(argv)
+    config = json.loads(a.config.read_text()) if a.config else {}
+    base = a.config.resolve().parent if a.config else Path.cwd()
+    for key in (*path_keys, 'taxon_label', 'run_accession', 'threads', 'memory_bytes'):
+        value = getattr(a, key)
+        if value is None:
+            value = config.get(key)
+        if key == 'threads' and value is None:
+            value = 8
+        if key == 'memory_bytes' and value is None:
+            value = 24_000_000_000
+        if value is None and key != 'busco_pythonpath':
+            ap.error('Missing configuration: ' + key)
+        if key in path_keys and value is not None:
+            path = Path(value).expanduser()
+            value = str((path if path.is_absolute() else base / path).resolve())
+        setattr(a, key, value)
+    return a
+
+
+def preflight(a):
+    from _nuclear_cli import fresh_output, report_plan
+    if not isinstance(a.threads, int) or a.threads < 1:
+        raise ValueError('threads must be a positive integer')
+    if not isinstance(a.memory_bytes, int) or a.memory_bytes < 1_000_000_000:
+        raise ValueError('memory_bytes must be an integer >= 1e9')
+    files = {key: req_file(getattr(a, key), key) for key in
+             ('r1', 'r2', 'download_receipt', 'qc_receipt', 'megahit', 'busco_python', 'busco_script')}
+    if files['r1'] == files['r2']:
+        raise ValueError('Paired read paths must differ')
+    for key in ('download_receipt', 'qc_receipt'):
+        json.loads(files[key].read_text())
+    for key in ('megahit', 'busco_python'):
+        if not os.access(files[key], os.X_OK):
+            raise ValueError('Executable permission is required: ' + key)
+    dirs = {key: req_dir(getattr(a, key), key) for key in ('lineage', 'download_path')}
+    if a.busco_pythonpath:
+        patch_root = req_dir(a.busco_pythonpath, 'busco_pythonpath')
+        patch = json.loads((patch_root / 'MEMORY_PATCH.json').read_text())
+        if sha256(patch_root / 'busco/busco_tools/miniprot.py') != patch['patched_sha256']:
+            raise ValueError('BUSCO memory patch hash mismatch')
+        dirs['busco_pythonpath'] = patch_root
+    if not a.taxon_label or Path(a.taxon_label).name != a.taxon_label or a.taxon_label in ('.', '..'):
+        raise ValueError('taxon_label must be a simple nonempty output name')
+    work = fresh_output(Path(a.work_root), [*files.values(), *dirs.values()])
+    return report_plan('recover_nuclear.py', {**files, **dirs},
+                       {'receipt': work / 'RUN_RECEIPT.json', 'assembly': work / 'assembly/final.contigs.fa',
+                        'busco_full_table': work / 'busco' / a.taxon_label / ('run_' + Path(a.lineage).name) / 'full_table.tsv'},
+                       ['MEGAHIT', 'BUSCO', 'BUSCO lineage dataset'],
+                       threads=a.threads, memory_bytes=a.memory_bytes)
+
+
+def plan(config_path):
+    """Return a read-only, JSON-compatible artifact and dependency plan."""
+    return preflight(parse_arguments(['--config',str(Path(config_path).resolve())]))
+
+
+def main(argv=None):
+    a = parse_arguments(argv)
+    print(json.dumps(preflight(a), indent=2))
+    if a.execute:
+        execute_recovery(a)
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

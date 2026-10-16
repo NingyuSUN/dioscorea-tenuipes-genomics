@@ -2,12 +2,23 @@
 
 ## Current state
 
-- **Objective:** provide a readable public code repository covering the later analysis scripts, workflows, purposes and software versions.
-- **Phase:** public code/documentation release; no new research analysis.
-- **Last verified:** 2026-10-16T11:56:14+09:00 (Asia/Tokyo). Sources, engineering tests and workflow dry runs checked; details in [release verification](docs/PUBLIC_CODE_RELEASE_2026-10-16.md).
-- **Entry points:** [README](README.md), [script catalogue](docs/SCRIPT_CATALOG.md), [software versions](software_versions.md), [workflow contracts](workflow/research/README.md).
-- **Limits:** historical scripts retain stage-specific input contracts; full scientific replay and original unrecorded runtime versions remain unverified. Raw sequencing data and manuscript drafts are outside this public code release.
-- **Next:** review the published code and purpose map; any scientific rerun requires a separate execution decision and matching inputs.
+- **Objective:** make all 22 historical scripts configurable, close dependencies and connect compatible workflows for public code review.
+- **Phase:** portability and engineering verification complete; public commit/push pending at index preparation.
+- **Last verified:** 2026-10-16T12:40:13+09:00 (Asia/Tokyo). 119 artificial-input unit/integration tests passed; 22 safe CLI checks passed; original/research and six portable workflow dry runs passed.
+- **Entry points:** [README](README.md), [script purposes](docs/SCRIPT_CATALOG.md), [portable workflow](workflow/portable/README.md), [configuration examples](config/portable/README.md), [release checks](docs/PORTABLE_SCRIPTS_2026-10-16.md).
+- **Limits:** real-data replay, actual systemd/cgroup execution and original external-tool compatibility remain unverified. Fixed sample/site/hash contracts remain active. No analysis was rerun.
+- **Next:** review/use the published code with matching inputs; any scientific execution remains a separate action. No unfinished code-review findings are recorded for this release.
+
+## 2026-10-16 — Configurable historical stages
+
+| Field | Record |
+|---|---|
+| Date | 2026-10-16T12:40:13+09:00; Asia/Tokyo. Engineering checks completed during this round. |
+| Purpose | Port the 22 historical directory-bound scripts, complete explicit dependencies, and connect compatible stages. This was code/configuration maintenance and synthetic verification, with zero historical data analyses. |
+| Inputs and code | Public baseline `58319f3a385ff764053160d7bc8d62b1ed02d876`; branch `public-update-20261016`. The 22 selected sources, original/distributed hashes and edits are in `workflow/research/SOURCE_MAP.csv`. Input scope: source files, reviewed metadata and small artificial fixtures; research sample/site counts are not applicable to this execution round. Reproducible checks: `python -m unittest discover -s tests -v`, `python workflow/tests/portable_checks.py`, `python workflow/tests/portable_dryrun.py`, and the existing workflow checks. |
+| Results and limits | 22 configurable entry points; 24 phase configurations; five focused chains plus a combined inventory DAG. 119 combined tests, 22 CLI checks and six portable DAG plans passed. Source-preservation and privacy reviews completed. Failed native outputs are preserved; completion requires stable input hashes and required outputs. Real scientific execution, installed external build compatibility and live resource scopes were not tested. |
+| Deliverables | `scripts/research/*/historical/`; `config/portable/`; `workflow/portable/`; `workflow/research/PORTABLE_STAGES.json`; `docs/PORTABLE_SCRIPTS_2026-10-16.md`; `docs/provenance/portable_code_audit.json`; updated source map, catalogue, dependencies and CI. |
+| Git / GitHub | Public repository https://github.com/NingyuSUN/dioscorea-tenuipes-genomics ; target `main`. Known baseline `58319f3a385ff764053160d7bc8d62b1ed02d876`; this round is pending commit/push at index preparation. The containing commit is available with `git log -1 -- PROJECT_INDEX.md`; final synchronization is verified against the live remote after push. Coverage is public code/configuration/docs only; private evidence archives and raw data remain outside the upload. |
 
 ## 2026-10-16 — Later code and workflow release
 

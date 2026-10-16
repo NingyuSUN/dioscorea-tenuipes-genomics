@@ -1,0 +1,76 @@
+{
+  "receipts": "../../results_portable/workflow_receipts/nuclear_preparation_chain",
+  "frozen_dirs": [
+    "../../data/portable",
+    "../../tools"
+  ],
+  "stages": {
+    "nuclear_main": {
+      "script": "scripts/research/nuclear/historical/run_nuclear_main.py",
+      "config": "nuclear_main.json",
+      "inputs": [
+        "../../data/portable/taxa.json",
+        "../../data/portable/WT42.faa",
+        "../../data/portable/WT42_metadata.json"
+      ],
+      "outputs": [
+        "../../results_portable/nuclear/NUCLEAR_RUN.json",
+        "../../results_portable/nuclear/metadata/FINAL_NUCLEAR_PANEL.json",
+        "../../results_portable/nuclear/matrices/genome_main_no2661/main.faa",
+        "../../results_portable/nuclear/matrices/genome_main_no2661/summary.json",
+        "../../results_portable/nuclear/results/genome_main_no2661/main.treefile",
+        "../../results_portable/nuclear/results/genome_main_no2661/main.ufboot",
+        "../../results_portable/nuclear/metadata/INPUT_STAGING.json"
+      ],
+      "after": [],
+      "threads": 8,
+      "tools": [
+        "../../tools/busco/bin/python",
+        "../../tools/busco/bin/busco",
+        "../../tools/mafft",
+        "../../tools/iqtree2"
+      ],
+      "input_directories": [
+        "../../data/portable/busco_runs",
+        "../../data/portable/embryophyta_odb10",
+        "../../data/portable/busco_cache"
+      ],
+      "generated_input_directories": [],
+      "output_directories": [
+        "../../results_portable/nuclear"
+      ]
+    },
+    "nuclear_loci": {
+      "script": "scripts/research/nuclear/historical/prepare_loci.py",
+      "config": "nuclear_loci.json",
+      "inputs": [
+        "../../results_portable/nuclear/matrices/genome_main_no2661/main.faa",
+        "../../results_portable/nuclear/matrices/genome_main_no2661/summary.json",
+        "../../results_portable/nuclear/results/genome_main_no2661/main.treefile"
+      ],
+      "outputs": [
+        "../../results_portable/loci/metadata/LOCUS_MANIFEST.json"
+      ],
+      "after": [
+        "nuclear_main"
+      ],
+      "threads": 1,
+      "tools": [],
+      "input_directories": [],
+      "generated_input_directories": [
+        "../../results_portable/nuclear/matrices/genome_main_no2661"
+      ],
+      "output_directories": [
+        "../../results_portable/loci"
+      ],
+      "bind_fields": {
+        "reference_tree_sha256": "../../results_portable/nuclear/results/genome_main_no2661/main.treefile"
+      },
+      "path_fields": [
+        "matrix_dir",
+        "reference_tree",
+        "outdir"
+      ]
+    }
+  }
+}

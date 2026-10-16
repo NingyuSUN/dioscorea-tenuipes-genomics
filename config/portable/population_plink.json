@@ -1,0 +1,6 @@
+{
+  "run_root": "../../results_portable/full_panel",
+  "outdir": "../../results_portable/plink",
+  "plink": "../../tools/plink",
+  "plink_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+}

@@ -1,0 +1,34 @@
+{
+  "paths": {
+    "output_dir": "../../results_portable/nuclear_ils/fitted"
+  },
+  "inputs": {
+    "contract": {
+      "path": "../../data/portable/nuclear_ils/FIT_CONTRACT.json",
+      "sha256": "b1e308c458636878d268a8d9b1ab83fee0236197991a58f530ba77eed4838fbf"
+    },
+    "snapshot_manifest": {
+      "path": "../../data/portable/nuclear_ils/snapshot_manifest.json",
+      "sha256": "24e07a9d548a4d063fefdffa8311acfe6e052131af445648c9a5f081c7e305c0"
+    },
+    "locus_manifest": {
+      "path": "../../data/portable/nuclear_ils/locus_manifest.json",
+      "sha256": "84c3fcd80ce9d021e03e2ee925f1dc9fc77f852757cd971683d0fb4fd3f0525d"
+    },
+    "model_table": {
+      "path": "../../data/portable/nuclear_ils/model_table.tsv",
+      "sha256": "5b3b881ab39a3df05c4434c37502fff746ea830d978d0785f4d24aa194f06492"
+    },
+    "scope_receipt": {
+      "path": "../../data/portable/nuclear_ils/FIT_SCOPE_RECEIPT.json"
+    }
+  },
+  "path_map": {},
+  "path_roots": {
+    "tools": "../../tools/",
+    "inputs": "../../data/portable/",
+    "evidence": "../../data/portable/nuclear_ils/",
+    "panthaica": "../../results_portable/panthaica",
+    "nuclear": "../../data/portable/nuclear_ils"
+  }
+}

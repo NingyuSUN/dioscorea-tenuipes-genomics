@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """Independent completed173-panel recount. Default is plan only; never infer/simulate."""
 import sys
-sys.dont_write_bytecode=True
 from pathlib import Path
 from collections import Counter
 from decimal import Decimal
 import argparse,csv,datetime,hashlib,json,math,os,re,shlex,time,traceback
-ROOT=Path('workspace/wgs/dt_research_p57_20260930/ils_execution_01/msc_runtime_04/panel_0001')
+try:
+    from .portable_inputs import Config, report, require_preflight
+except ImportError:
+    from portable_inputs import Config, report, require_preflight
+PORTABLE=None
+
+ROOT=None
+AUDIT_CPU=0
+IQ_BINARY=None
 AA=set('ARNDCQEGHILKMFPSTWYV')
 FOCAL=('Dioscorea_tenuipes_historical','Dioscorea_tokoro','Dioscorea_gracillima','Dioscorea_zingiberensis')
 KEYS=('DT_TOK','DT_GRA','DT_ZIN','unresolved')
@@ -23,15 +30,15 @@ def need(ok,msg):
  if not ok:raise ValueError(msg)
 def sha(p):
  h=hashlib.sha256()
- with Path(p).open('rb') as f:
+ with (PORTABLE.resolve(p) if PORTABLE else Path(p)).open('rb') as f:
   for b in iter(lambda:f.read(1048576),b''):h.update(b)
  return h.hexdigest()
-def read(p):return json.loads(Path(p).read_text())
+def read(p):return json.loads((PORTABLE.resolve(p) if PORTABLE else Path(p)).read_text())
 def save(p,o):
  with Path(p).open('x') as f:json.dump(o,f,indent=2,allow_nan=False);f.write('\n')
 def fasta(p):
  d={};k=None
- for s in Path(p).read_text().splitlines():
+ for s in (PORTABLE.resolve(p) if PORTABLE else Path(p)).read_text().splitlines():
   if s.startswith('>'):k=s[1:].split()[0];need(k not in d,'Duplicate FASTA label');d[k]=''
   elif s.strip():need(k is not None,'Sequence without header');d[k]+=s.strip()
  return d
@@ -113,20 +120,20 @@ def parse_report(text,aln,input_path,seed,tree):
  region=text.split('Tree in newick format:',1)[1].split('CONSENSUS TREE',1)[0];rt=parse_tree(region[:region.index(';')+1].strip());binding=compare_report_tree(rt,tree,aln)
  return dict(selected_model=m,reported_BIC=bic,logL=ll,alpha=alpha,report_tree_binding=binding)
 def scope_check(p):
- g=read(p);need(sys.platform=='linux' and g['status']=='VERIFIED_BEFORE_EXEC' and g['memory_max_bytes']==2147483648 and g['swap_max_bytes']==0 and g['logical_cpu_ids']==[35],'Audit receipt limits')
+ g=read(p);need(sys.platform=='linux' and g['status']=='VERIFIED_BEFORE_EXEC' and g['memory_max_bytes']==2147483648 and g['swap_max_bytes']==0 and g['logical_cpu_ids']==[AUDIT_CPU],'Audit receipt limits')
  rel=next(x[3:] for x in Path('/proc/self/cgroup').read_text().splitlines() if x.startswith('0::'));cg=Path('/sys/fs/cgroup')/rel.lstrip('/')
- need(cg.resolve()==Path(g['cgroup']).resolve() and sorted(os.sched_getaffinity(0))==[35],'Audit actual scope')
+ need(cg.resolve()==Path(g['cgroup']).resolve() and sorted(os.sched_getaffinity(0))==[AUDIT_CPU],'Audit actual scope')
  need((cg/'memory.max').read_text().strip()=='2147483648' and (cg/'memory.swap.max').read_text().strip()=='0','Audit effective memory')
  a=list(g['command']);b=[sys.executable,sys.argv[0],*sys.argv[1:]];a[:2]=[str(Path(x).resolve()) for x in a[:2]];b[:2]=[str(Path(x).resolve()) for x in b[:2]];need(a==b,'Audit guard command');return g
 
 def execute(args):
- start=time.monotonic();end=start+600;out=args.out.resolve();need(out==ROOT/'audit_inference_01' and not out.exists(),'Fixed fresh audit output required');guard=scope_check(args.scope_receipt)
- contract_path=Path(__file__).with_name('AUDIT_CONTRACT.json');contract=read(contract_path);need(sha(__file__)==contract['audit_script_sha256'],'Audit code changed')
- support=Path(__file__).parent/'support_definition/SUPPORT_DEFINITION_AUDIT.json';need(sha(support)==SUPPORT_SHA,'Support-definition source changed')
+ start=time.monotonic();end=start+600;out=args.out.resolve();need(not out.exists() and out!=ROOT and not ROOT.is_relative_to(out),'Fresh audit output outside source ancestry required');guard=scope_check(args.scope_receipt)
+ contract_path=Path(PORTABLE.input('audit_contract')['path']);contract=read(contract_path);need(sha(PORTABLE.input('original_audit_script')['path'])==contract['audit_script_sha256'],'Original audit source does not match historical contract')
+ support=Path(PORTABLE.input('support_definition',SUPPORT_SHA)['path']);need(sha(support)==SUPPORT_SHA,'Support-definition source changed')
  G=ROOT/'generation';I=ROOT/'inference_results';hashes={}
  def tick():need(time.monotonic()<end,'Audit deadline; incomplete is not PASS')
  def check(p,h):
-  p=Path(p);k=str(p)
+  p=PORTABLE.resolve(p);k=str(p)
   if k not in hashes:hashes[k]=sha(p)
   need(hashes[k]==h,'SHA mismatch '+k)
  chain=read(ROOT/'control/CHAIN_EXIT.json');outer=read(ROOT/'inference/EXIT_RECEIPT.json');state=read(I/'STATE.json')
@@ -157,9 +164,9 @@ def execute(args):
    need(list(masked)==taxa and list(aln)==retained==source['retained_taxa'] and {len(s) for s in masked.values()}=={length},'Taxa/length '+gene)
    need(all((x==y if x not in AA else y in AA) for t in taxa for x,y in zip(old[t],masked[t])),'Cell mask changed '+gene);need(aln=={t:s for t,s in masked.items() if set(s)&AA},'Retained-row policy');missing=sum(c not in AA for s in old.values() for c in s);missing_total+=missing
    seed=j['seed'];argv=list(source['original_inference_argv']);argv[0]=j['argv'][0]
-   for flag,value in [('-s',j['input_fasta']),('-seed',str(seed)),('--prefix',str(prefix))]:need(argv.count(flag)==1,'Ambiguous command');argv[argv.index(flag)+1]=value
-   check(argv[0],IQ_SHA);need(executed[gene]['argv']==argv,'Original inference settings altered')
-   run=read(D/'RUN_RECEIPT.json');sc=read(D/'SCOPE_RECEIPT.json');unit='dt-msc03-'+str(state['pid'])+'-'+gene+'.scope';timecmd=['/usr/bin/time','-v','-o',str(D/'TIME.txt'),*argv]
+   for flag,value in [('-s',j['input_fasta']),('-seed',str(seed)),('--prefix',executed[gene]['argv'][executed[gene]['argv'].index('--prefix')+1])]:need(argv.count(flag)==1,'Ambiguous command');argv[argv.index(flag)+1]=value
+   need(PORTABLE.resolve(argv[argv.index('--prefix')+1])==prefix,'Relocated inference prefix mismatch');check(IQ_BINARY,IQ_SHA);need(executed[gene]['argv']==argv,'Original inference settings altered')
+   run=read(D/'RUN_RECEIPT.json');sc=read(D/'SCOPE_RECEIPT.json');unit='dt-msc03-'+str(state['pid'])+'-'+gene+'.scope';timecmd=list(sc['command']);need(len(timecmd)==4+len(argv) and timecmd[1:3]==['-v','-o'] and PORTABLE.resolve(timecmd[3])==D/'TIME.txt' and timecmd[4:]==argv,'Recorded timing command differs')
    need(run['status']=='COMPLETE' and run['unit']==unit and run['gene']==gene and 0<run['timeout_seconds']<=480 and run['elapsed_seconds']<=run['timeout_seconds']+20,'Run incomplete/bound')
    need(sc['status']=='VERIFIED_BEFORE_EXEC' and sc['command']==timecmd and sc['memory_max_bytes']==2147483648 and sc['swap_max_bytes']==0 and sc['logical_cpu_ids']==[cpu] and Path(sc['cgroup']).name==unit,'Real command/scope differs')
    need(run['argv'][run['argv'].index('--')+1:]==timecmd,'Run wrapper differs');tm=(D/'TIME.txt').read_text();need(re.search(r'^\s*Exit status:\s*0\s*$',tm,re.M),'Real exit nonzero/missing');peak=int(re.search(r'Maximum resident set size \(kbytes\):\s*(\d+)',tm)[1]);need(peak<=2097152,'PeakRSS')
@@ -191,7 +198,7 @@ def execute(args):
   for k,v in summary.items():need(producer[k]==v,'Panel producer summary mismatch '+k)
   need(producer['calibrated_P_value'] is None,'Unexpected formalP')
   binding_paths=[I/'OUTPUT_MANIFEST.json',I/'PANEL_RESULTS.json',I/'INPUT_BINDING.json',I/'STATE.json',ROOT/'inference/EXIT_RECEIPT.json',ROOT/'control/CHAIN_EXIT.json',G/'INFERENCE_JOBS.json',G/'GENERATION_OUTPUT_SEAL.json',G/'PANEL_INPUT_FREEZE.json',Path(gf['fitted_path']),contract_path,Path(__file__),support]
-  result=dict(status='PASS_ONE_CONDITIONAL_PANEL_INDEPENDENT_RECOUNT',role='Design-participant result consistency; not new independent scientific triad',utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),elapsed_seconds=time.monotonic()-start,audit_guard=guard,genes=173,AA_columns=68796,original_missing_cells=missing_total,bootstrap_trees_recounted=boots_total,focal_eligible_genes=139,summary=summary,selected_models=dict(Counter(r['selected_model'] for r in rows)),RF_histogram=dict(Counter(r['full_unrooted_RF_on_retained_taxa'] for r in rows)),warnings_recorded=len(warnings),manifest_files_verified=len(sealed),sources_hashed=len(hashes),formal_P_value=None,research_jobs_started=0,source_bindings={str(p):dict(sha256=sha(p),bytes=p.stat().st_size) for p in binding_paths},support_definition='Any resolved projected split with >=950 of all1000 bootstrap trees; no SH gate or point-match gate. Zero/nearzero branches retained structurally.',limitations=['One conditional S0 realization, not a calibrated general ILS test.','True genealogy is simulation input, not biological truth.','Parameter/root/clock/rate/linkage/refitting calibration remains outstanding.','Warnings retained, no outcome-based exclusion.'])
+  result=dict(status='PASS_ONE_CONDITIONAL_PANEL_INDEPENDENT_RECOUNT',role='Design-participant result consistency; not new independent scientific triad',utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),elapsed_seconds=time.monotonic()-start,audit_guard=guard,genes=173,AA_columns=68796,original_missing_cells=missing_total,bootstrap_trees_recounted=boots_total,focal_eligible_genes=139,summary=summary,selected_models=dict(Counter(r['selected_model'] for r in rows)),RF_histogram=dict(Counter(r['full_unrooted_RF_on_retained_taxa'] for r in rows)),warnings_recorded=len(warnings),manifest_files_verified=len(sealed),sources_hashed=len(hashes),formal_P_value=None,research_jobs_started=0,portable_implementation_sha256=sha(__file__),portable_config_sha256=sha(PORTABLE.filename),source_bindings={str(p):dict(sha256=sha(p),bytes=PORTABLE.resolve(p).stat().st_size) for p in binding_paths},support_definition='Any resolved projected split with >=950 of all1000 bootstrap trees; no SH gate or point-match gate. Zero/nearzero branches retained structurally.',limitations=['One conditional S0 realization, not a calibrated general ILS test.','True genealogy is simulation input, not biological truth.','Parameter/root/clock/rate/linkage/refitting calibration remains outstanding.','Warnings retained, no outcome-based exclusion.'])
   save(out/'RESULT.json',result);save(out/'MODEL_AND_EDGE_DETAILS.json',details);save(out/'WARNINGS.json',warnings)
   with (out/'PER_GENE.tsv').open('x',newline='') as f:
    w=csv.DictWriter(f,fieldnames=list(rows[0]),delimiter='\t');w.writeheader()
@@ -200,8 +207,24 @@ def execute(args):
  except BaseException:
   save(out/'FAILED_OR_INCOMPLETE.json',dict(status='FAILED_OR_INCOMPLETE_NOT_ACCEPTED',elapsed_seconds=time.monotonic()-start,completed_gene_checks=len(rows),bootstrap_trees_checked=boots_total,error=traceback.format_exc(),research_outputs_unchanged=True));raise
 
+
+def plan(config_path):
+ c=Config(config_path);root=c.path('panel_root');out=c.path('output_dir')
+ inputs=[c.input('audit_contract'),c.input('original_audit_script'),c.input('support_definition',SUPPORT_SHA),c.input('iqtree_binary',IQ_SHA)]
+ for role,rel,h in [('chain_exit','control/CHAIN_EXIT.json',None),('inference_exit','inference/EXIT_RECEIPT.json',None),('inference_state','inference_results/STATE.json',None),('jobs','generation/INFERENCE_JOBS.json',JOBS_SHA),('generation_seal','generation/GENERATION_OUTPUT_SEAL.json',GEN_SEAL_SHA),('panel_freeze','generation/PANEL_INPUT_FREEZE.json',INPUT_FREEZE_SHA),('program_freeze','inference/PROGRAM_FREEZE.json',PROGRAM_FREEZE_SHA),('output_manifest','inference_results/OUTPUT_MANIFEST.json',None),('panel_results','inference_results/PANEL_RESULTS.json',None),('input_binding','inference_results/INPUT_BINDING.json',None)]:
+  inputs.append({'role':role,'path':str(root/rel),'sha256':h})
+ if 'scope_receipt' in c.data.get('inputs',{}):inputs.append(c.input('scope_receipt'))
+ return {'script':'audit_panel','inputs':inputs,'outputs':[str(out/n) for n in ['RESULT.json','MODEL_AND_EDGE_DETAILS.json','WARNINGS.json','PER_GENE.tsv','OUTPUT_SEAL.json']],
+   'required_threads':1,'tools':{},'python_packages':['tskit'],'transitive_inputs':'The generation/program/output seals bind all per-gene FASTA, tree sequences, IQ-TREE logs/reports/bootstrap trees and receipts',
+   'scientific_contract':'Completed 173-gene / 173000-bootstrap-tree panel only; fixed seed and hash bindings; audit 2 GiB / no swap / one configured CPU / 600 seconds; no jobs launched'}
+
 def main():
- p=argparse.ArgumentParser(description=__doc__);p.add_argument('--execute',action='store_true');p.add_argument('--out',type=Path,default=ROOT/'audit_inference_01');p.add_argument('--scope-receipt',type=Path);a=p.parse_args()
- if not a.execute:print(json.dumps(dict(status='PLAN_ONLY_NO_ARTIFACT_READ_OR_SUBPROCESS',root=str(ROOT),output=str(a.out),genes=173,bootstrap_trees=173000,CPU=35,memory_bytes=2147483648,swap_bytes=0,internal_limit_seconds=600,requires_completed_chain=True,no_research_execution=True),indent=2));return
- need(a.scope_receipt is not None,'Actual audit scope receipt required');execute(a)
-if __name__=='__main__':main()
+ global ROOT,PORTABLE,AUDIT_CPU,IQ_BINARY
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--config',required=True,type=Path);p.add_argument('--execute',action='store_true');a=p.parse_args()
+ PORTABLE=Config(a.config);spec=plan(a.config)
+ if not a.execute:return report(spec)
+ require_preflight(spec);ROOT=PORTABLE.path('panel_root');a.out=PORTABLE.path('output_dir');a.scope_receipt=PORTABLE.input('scope_receipt')['path']
+ AUDIT_CPU=PORTABLE.data.get('audit_cpu')
+ if not isinstance(AUDIT_CPU,int) or isinstance(AUDIT_CPU,bool) or AUDIT_CPU<0:raise ValueError('audit_cpu must be an explicit nonnegative CPU ID')
+ IQ_BINARY=PORTABLE.input('iqtree_binary',IQ_SHA)['path'];execute(a);return 0
+if __name__=='__main__':raise SystemExit(main())

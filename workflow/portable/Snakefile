@@ -1,0 +1,36 @@
+"""Optional configured historical workflows; default -n only plans jobs."""
+import sys
+from pathlib import Path
+
+ROOT = Path(workflow.basedir).parents[1]
+sys.path.insert(0, str(ROOT / 'workflow/portable'))
+from stages import load_manifest, tracked_inputs
+
+if 'manifest' not in config:
+    raise ValueError('Supply --config manifest=config/portable/<chain>.json')
+PORTABLE = load_manifest(config['manifest'])
+RECEIPTS = str(PORTABLE['receipts'])
+PYTHON = config.get('python', sys.executable)
+
+rule all:
+    input:
+        [str(stage['receipt']) for stage in PORTABLE['stages'].values()]
+    default_target: True
+
+rule portable_stage:
+    input:
+        lambda wc: tracked_inputs(PORTABLE, wc.stage)
+    output:
+        protected(RECEIPTS + '/{stage}.json')
+    threads:
+        lambda wc: PORTABLE['stages'][wc.stage]['threads']
+    params:
+        runner=str(ROOT / 'workflow/portable/stages.py'),
+        manifest=str(PORTABLE['path']),
+        python=PYTHON,
+        required=lambda wc: PORTABLE['stages'][wc.stage]['threads']
+    shell:
+        r'''
+        test {threads} -ge {params.required}
+        {params.python:q} {params.runner:q} --manifest {params.manifest:q} --stage {wildcards.stage:q} --python {params.python:q} --allocated-threads {threads} --execute
+        '''

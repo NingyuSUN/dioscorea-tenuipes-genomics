@@ -1,0 +1,16 @@
+{
+  "work_root": "../../results_portable/recovered",
+  "r1": "../../data/portable/read1.fastq.gz",
+  "r2": "../../data/portable/read2.fastq.gz",
+  "download_receipt": "../../data/portable/download.json",
+  "qc_receipt": "../../data/portable/qc.json",
+  "megahit": "../../tools/megahit",
+  "busco_python": "../../tools/busco/bin/python",
+  "busco_script": "../../tools/busco/bin/busco",
+  "lineage": "../../data/portable/embryophyta_odb10",
+  "download_path": "../../data/portable/busco_cache",
+  "taxon_label": "Dioscorea_gracillima",
+  "run_accession": "ACCESSION",
+  "threads": 8,
+  "memory_bytes": 24000000000
+}

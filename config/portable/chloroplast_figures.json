@@ -1,0 +1,21 @@
+{
+  "paths": {
+    "output_dir": "../../results_portable/chloroplast_ils/results/figures"
+  },
+  "inputs": {
+    "distance_grid": {
+      "path": "../../data/portable/chloroplast_ils/validated/distance_grid_validated.csv"
+    },
+    "topology_counts": {
+      "path": "../../data/portable/chloroplast_ils/validated/topology_counts.csv"
+    }
+  },
+  "path_map": {},
+  "path_roots": {
+    "tools": "../../tools/",
+    "inputs": "../../data/portable/",
+    "evidence": "../../data/portable/chloroplast_ils/",
+    "panthaica": "../../results_portable/panthaica",
+    "nuclear": "../../data/portable/nuclear_ils"
+  }
+}

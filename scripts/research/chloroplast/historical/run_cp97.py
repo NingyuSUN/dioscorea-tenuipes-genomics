@@ -2,7 +2,9 @@
 """Frozen one-shot CP97 execution. Default prints plan; no implicit dispatch."""
 import argparse,collections,datetime,hashlib,json,math,os,re,signal,subprocess,sys,time,traceback,uuid
 from pathlib import Path
-ROOT=Path('workspace/wgs/dt_research_p57_20260930/cp_expansion_entry/tree_runs_recovery03/without_hachi97_01')
+import portable_cli as portable
+ROOT=None
+CONFIG_PATH=None
 CPUS=[0,1,2,3]
 def require(ok,msg):
     if not ok: raise ValueError(msg)
@@ -33,13 +35,35 @@ def validate_deletion(raw98,raw97,columns,labels,drop,alphabet):
     require(raw97==b''.join(x[2] for x in expect),'97 matrix is not byte-exact deletion of the Hachi record')
     require(all(x[1]==y[1] for x,y in zip(expect,b)),'Retained AA/NT row changed')
     return {'rows_before':len(a),'rows_after':len(b),'columns':columns,'deleted_label':drop,'retained_order_equal':True,'retained_sequences_equal':True,'record_bytes_equal':True,'alphabet_counts':dict(collections.Counter(b''.join(x[1] for x in b).decode('ascii'))),'retained_row_sha256':{x[0]:hashlib.sha256(x[1]).hexdigest() for x in b}}
+def configure(config_path):
+    c=portable.configure(config_path, ('out','program_freeze','python','systemd_run','systemctl','taskset','timeout'))
+    for record in [*c['inputs'].values(),c['executable'],c['guard']]:
+        record['path']=str(portable.resolve(c['_config'],record['path']))
+    return c
+
+def plan(config_path):
+    c=configure(config_path)
+    inputs={k:v['path'] for k,v in c['inputs'].items()}
+    inputs.update(program_freeze=c['program_freeze'],guard=c['guard']['path'],script=Path(__file__),helper=Path(portable.__file__))
+    names=['DISPATCH.json','OUTPUT_MANIFEST.json','control/EXIT_RECEIPT.json','control/TREE_EXIT.json',
+           'tree97/main.treefile','tree97/main.contree','tree97/main.iqtree','tree97/main.log',
+           'tree97/main.ufboot','tree97/main.best_model.nex']
+    tools={k:c[k] for k in ('python','systemd_run','systemctl','taskset','timeout')}
+    tools['iqtree']=c['executable']['path']
+    return portable.contract(c['_config'],inputs,{n:c['out']/n for n in names},tools,c['out'],
+                             one_tree_only='98 minus Hachi, fixed 124448 columns',resources=c['resources'],required_threads=4)
+
 def verify_bundle():
-    require(Path(__file__).resolve()==ROOT/'run_cp97.py','Run only from the frozen remote root')
-    freeze=json.loads((ROOT/'PROGRAM_FREEZE.json').read_text())
-    require(set(freeze['files'])=={'run_cp97.py','CONFIG.json'},'Unexpected program freeze')
+    c=configure(CONFIG_PATH)
+    require(c['out']==ROOT,'Output root changed')
+    require(c['columns']==124448,'Frozen CP97 column count must remain 124448')
+    freeze=json.loads(c['program_freeze'].read_text())
+    required={Path(__file__).resolve(),c['_config'],Path(portable.__file__).resolve()}
+    observed=set()
     for n,v in freeze['files'].items():
-        p=ROOT/n;require(p.stat().st_size==v['bytes'] and sha(p)==v['sha256'],'Program freeze mismatch: '+n)
-    c=json.loads((ROOT/'CONFIG.json').read_text());require(c['remote_root']==str(ROOT),'Output root changed')
+        p=portable.resolve(c['program_freeze'],v.get('path',n));observed.add(p)
+        require(p.stat().st_size==v['bytes'] and sha(p)==v['sha256'],'Program freeze mismatch: '+n)
+    require(required<=observed,'Program freeze must bind this script, configuration and portable helper')
     require(c['resources']=={'cpus':CPUS,'memory_bytes':6442450944,'swap_bytes':0,'minimum_mem_available_bytes':17179869184,'soft_term_seconds':14385,'hard_seconds':14400,'startup_cpu_sample_seconds':2,'maximum_mean_cpu_busy_fraction':0.2},'Resource contract changed')
     return c
 def cpu_counters():
@@ -76,10 +100,13 @@ def frozen_inputs(c):
     matrix=validate_deletion(a,b,c['columns'],c['expected_labels98'],c['deleted_label'],c['alphabet'])
     require(matrix['rows_before']==98 and matrix['rows_after']==97,'Require exactly 98 -> 97 rows')
     entry=json.loads(Path(c['inputs']['entry_receipt']['path']).read_text());require(entry['matrix_hashes']['control97_without_Hachi']==c['inputs']['control97']['sha256'],'Prebuilt control97 receipt mismatch')
-    argv=list(c['original_argv']);argv[argv.index('-s')+1]=c['inputs']['control97']['path'];argv[argv.index('--prefix')+1]=str(ROOT/'tree97/main')
-    require(argv[argv.index('-p')+1]==c['inputs']['models']['path'],'Model path mismatch')
+    argv=list(c['original_argv'])
+    # Only filesystem locators change. Every original scientific argument is retained.
+    argv[0]=c['executable']['path'];argv[argv.index('-s')+1]=c['inputs']['control97']['path']
+    argv[argv.index('-p')+1]=c['inputs']['models']['path'];argv[argv.index('--prefix')+1]=str(ROOT/'tree97/main')
+    require(sha(argv[argv.index('-p')+1])==c['inputs']['models']['sha256'],'Model file binding mismatch')
     require(all(x in matrix['retained_row_sha256'] for x in argv[argv.index('-o')+1].split(',')),'Original outgroups missing')
-    return {'utc':utc(),'source_sha256':hashes,'iqtree_sha256':exe['sha256'],'guard_sha256':guard['sha256'],'matrix':matrix,'old_main98_exit_code':0,'old_main98_running':False,'argv':argv,'argv_changes_only':['-s','--prefix'],'new_tree_executed':False}
+    return {'utc':utc(),'source_sha256':hashes,'iqtree_sha256':exe['sha256'],'guard_sha256':guard['sha256'],'matrix':matrix,'old_main98_exit_code':0,'old_main98_running':False,'argv':argv,'argv_changes_only':['executable_path','-s','-p_path','--prefix'],'new_tree_executed':False}
 def process_identity(pid):
     t=(Path('/proc')/str(pid)/'stat').read_text().split(') ',1)[1].split()
     return {'pid':pid,'start_ticks':int(t[19]),'boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip()}
@@ -109,7 +136,7 @@ def worker(token):
     try:
         before=frozen_inputs(c);before['resource_preflight']=resource_preflight(c);save(control/'PREFLIGHT.json',before)
         require(not stop,'Termination before tree launch');(ROOT/'tree97').mkdir(exist_ok=False)
-        save(control/'TREE_COMMAND.json',{'argv':before['argv'],'utc':utc(),'program_freeze_sha256':sha(ROOT/'PROGRAM_FREEZE.json'),'one_tree_only':True})
+        save(control/'TREE_COMMAND.json',{'argv':before['argv'],'utc':utc(),'program_freeze_sha256':sha(c['program_freeze']),'one_tree_only':True})
         env=dict(os.environ);env.update(OMP_NUM_THREADS='4',OPENBLAS_NUM_THREADS='1',MKL_NUM_THREADS='1',NUMEXPR_NUM_THREADS='1')
         with (ROOT/'tree97/stdout.log').open('x') as out,(ROOT/'tree97/stderr.log').open('x') as err:
             child=subprocess.Popen(before['argv'],stdout=out,stderr=err,env=env)
@@ -130,9 +157,9 @@ def worker(token):
 
 def supervise(token):
     c=verify_bundle();authorized_internal(token);control=ROOT/'control';control.mkdir(exist_ok=False)
-    proc=None;stops=[];error=None;rc=1;start=time.monotonic();unit='dt-cp97-without-hachi-01.scope'
+    proc=None;stops=[];error=None;rc=1;start=time.monotonic();unit='dt-cp97-'+hashlib.sha256(str(ROOT).encode()).hexdigest()[:16]+'.scope'
     def stop_owned():
-        subprocess.run(['systemctl','--user','kill','--kill-whom=all','--signal=TERM',unit],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=5)
+        subprocess.run([str(c['systemctl']),'--user','kill','--kill-whom=all','--signal=TERM',unit],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=5)
     def term(signum,frame):
         stops.append(signum)
         if proc is not None and proc.poll() is None:
@@ -140,7 +167,7 @@ def supervise(token):
             except Exception: pass
     signal.signal(signal.SIGTERM,term);signal.signal(signal.SIGINT,term)
     try:
-        cmd=['systemd-run','--user','--scope','--quiet','--unit='+unit,'-p','MemoryMax=6442450944','-p','MemorySwapMax=0','taskset','-c','0-3','/usr/bin/timeout','--signal=TERM','--kill-after=15','14385',c['python'],c['guard']['path'],'--memory-bytes','6442450944','--cpus','4','--receipt',str(control/'SCOPE.json'),'--',c['python'],str(ROOT/'run_cp97.py'),'--worker',token]
+        cmd=[str(c['systemd_run']),'--user','--scope','--quiet','--unit='+unit,'-p','MemoryMax=6442450944','-p','MemorySwapMax=0',str(c['taskset']),'-c','0-3',str(c['timeout']),'--signal=TERM','--kill-after=15','14385',str(c['python']),c['guard']['path'],'--memory-bytes','6442450944','--cpus','4','--receipt',str(control/'SCOPE.json'),'--',str(c['python']),str(Path(__file__).resolve()),'--config',str(CONFIG_PATH),'--execute','--worker',token]
         save(control/'GUARD_COMMAND.json',{'argv':cmd,'utc':utc(),'hard_seconds_including_kill_grace':14400})
         require(not stops,'Termination before guarded launch')
         with (control/'stdout.log').open('x') as out,(control/'stderr.log').open('x') as err:
@@ -151,7 +178,7 @@ def supervise(token):
                 stop_owned()
                 try: rc=proc.wait(timeout=15)
                 except subprocess.TimeoutExpired:
-                    subprocess.run(['systemctl','--user','kill','--kill-whom=all','--signal=KILL',unit],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=5)
+                    subprocess.run([str(c['systemctl']),'--user','kill','--kill-whom=all','--signal=KILL',unit],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=5)
                     os.killpg(proc.pid,signal.SIGKILL);rc=proc.wait()
                 raise TimeoutError('Outer wrapper timed out; no retry')
         require(rc==0 and not stops,'Guarded command did not complete successfully')
@@ -160,7 +187,7 @@ def supervise(token):
     finally:
         # If the guard failed, terminate only this exact owned scope before sealing partial files.
         if rc!=0 or error or stops:
-            try: subprocess.run(['systemctl','--user','stop',unit],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=20)
+            try: subprocess.run([str(c['systemctl']),'--user','stop',unit],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=20)
             except Exception: pass
         active=[];scopepath=control/'SCOPE.json'
         if scopepath.exists():
@@ -174,21 +201,23 @@ def supervise(token):
     return 0 if rc==0 and error is None and not stops else 1
 
 def main():
-    a=argparse.ArgumentParser();g=a.add_mutually_exclusive_group();g.add_argument('--start',action='store_true');g.add_argument('--precheck',action='store_true');g.add_argument('--supervise');g.add_argument('--worker');x=a.parse_args()
-    if not any([x.start,x.precheck,x.supervise,x.worker]):
-        print(json.dumps({'status':'PLAN_ONLY_NOT_EXECUTED','remote_root':str(ROOT),'one_tree_only':'98 minus Hachi, fixed 124448 columns','cpus':CPUS,'memory_GiB':6,'swap':0,'hard_seconds':14400,'expected_hours':[2,3],'start':['workspace/miniconda3/bin/python',str(ROOT/'run_cp97.py'),'--start']}));return
-    if x.worker:sys.exit(worker(x.worker))
-    if x.supervise:sys.exit(supervise(x.supervise))
+    global ROOT,CONFIG_PATH
+    a=portable.parser(__doc__)
+    g=a.add_mutually_exclusive_group();g.add_argument('--precheck',action='store_true',help='Read-only full frozen-input/resource check')
+    g.add_argument('--supervise',help=argparse.SUPPRESS);g.add_argument('--worker',help=argparse.SUPPRESS)
+    x=a.parse_args();CONFIG_PATH=x.config.resolve();c=configure(CONFIG_PATH);ROOT=c['out']
+    if x.worker or x.supervise:
+        require(x.execute,'Internal execution also requires --execute and a bound dispatch token')
+        if x.worker:sys.exit(worker(x.worker))
+        sys.exit(supervise(x.supervise))
+    checked=portable.preflight(plan(CONFIG_PATH))
+    if not x.execute and not x.precheck:portable.emit(checked);return
     c=verify_bundle();require(not (ROOT/'DISPATCH.json').exists(),'Dispatch already attempted: no restart/retry')
     info=frozen_inputs(c);info['resources']=resource_preflight(c)
     if x.precheck:print(json.dumps(dict(info,status='PRECHECK_ONLY_NO_DISPATCH'),indent=2));return
     require(not (ROOT/'tree97').exists() and not (ROOT/'control').exists(),'Output/control directory already exists; refuse checkpoint overwrite')
-    token=uuid.uuid4().hex;save(ROOT/'DISPATCH.json',{'utc':utc(),'token':token,'program_freeze_sha256':sha(ROOT/'PROGRAM_FREEZE.json'),'precheck':info,'automatic_retry':False})
-    try:
-        with (ROOT/'launcher.stdout.log').open('x') as out,(ROOT/'launcher.stderr.log').open('x') as err:
-            p=subprocess.Popen([c['python'],str(ROOT/'run_cp97.py'),'--supervise',token],stdout=out,stderr=err,start_new_session=True,close_fds=True)
-        identity=dict(process_identity(p.pid),utc=utc(),status='DETACHED_SUPERVISOR_STARTED_NOT_COMPLETED')
-        save(ROOT/'DISPATCH_PROCESS.json',identity);print(json.dumps(identity))
-    except BaseException:
-        save(ROOT/'DISPATCH_ERROR.json',{'error':traceback.format_exc(),'automatic_retry':False});raise
+    ROOT.mkdir(parents=True,exist_ok=False)
+    token=uuid.uuid4().hex;save(ROOT/'DISPATCH.json',{'utc':utc(),'token':token,'program_freeze_sha256':sha(c['program_freeze']),'precheck':info,'automatic_retry':False})
+    # Keep the coordinator attached so workflow callers observe the actual final exit code.
+    sys.exit(supervise(token))
 if __name__=='__main__':main()

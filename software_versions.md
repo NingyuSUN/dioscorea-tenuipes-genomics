@@ -48,3 +48,12 @@ The scikit-allel **1.3.3** reference identifies documentation inspected for the 
 ## Current code-check environment
 
 The 2026-10-16 public-code engineering environment recorded Python **3.12.14**, Snakemake **9.27.0**, NumPy **2.5.4**, SciPy **1.18.1**, pandas **3.0.6**, matplotlib **3.11.2**, Biopython **1.88**, pysam **0.24.1**, splitspy **0.0.10**, PyYAML **6.0.3**, msprime **1.4.4**, and tskit **1.0.3**. Temporary bcftools **1.22** and HTSlib **1.22.1** were used for the existing code tests. The [sanitized environment receipt](docs/provenance/current_validation_environment.json) records these versions. They describe code checks in this update, not historical research runs or a new scientific analysis.
+
+## Historical-script portability update
+
+The 22 configured historical stages use the recorded versions above; no new
+scientific runtime was measured. [Their dependency table](workflow/portable/DEPENDENCIES.md)
+now identifies Python packages, external tools, lineage/data bundles and Linux
+resource controls by stage. The same recorded engineering environment is used
+for artificial-input checks. PCAngsd build hashes remain explicit; installing a
+package with the same version does not establish an identical compiled build.

@@ -1,0 +1,47 @@
+{
+  "phase": "full",
+  "paths": {
+    "root": "../../results_portable/panthaica",
+    "raw_dir": "../../data/portable/panthaica/raw",
+    "run_dir": "../../results_portable/panthaica/assembly/full_configured"
+  },
+  "inputs": {
+    "workflow_settings": {
+      "path": "metadata/RNA_QC_CONFIG.json",
+      "sha256": "152e2fad5989f3d1b01f90ac499d48ef2811654350ad1892f7d3d4daeac579a5",
+      "original_sha256": "ed19abb14b85a9d10a626f2b43146a1a55bf565da038b4b07b0f0c4996a1611c",
+      "metadata_migration": {
+        "path": "metadata/METADATA_MIGRATION.json",
+        "sha256": "7be628227a459f24eb00f6e647c3c3ed97facb70d28545dda208b54140678108"
+      }
+    },
+    "download_receipt": {
+      "path": "../../data/portable/panthaica/DOWNLOAD_RECEIPT.json"
+    },
+    "qc_receipt": {
+      "path": "../../results_portable/panthaica/qc/qc_configured/QC_RECEIPT.json"
+    },
+    "spades_install_receipt": {
+      "path": "../../data/portable/panthaica/RNASPADES_INSTALL_RECEIPT.json"
+    },
+    "pilot_receipt": {
+      "path": "../../results_portable/panthaica/assembly/pilot_configured/PILOT_RECEIPT.json"
+    }
+  },
+  "tools": {
+    "cutadapt": "../../tools/cutadapt",
+    "rna_spades_launcher": "../../tools/rnaspades.py",
+    "spades_python": "../../tools/python3",
+    "systemd_run": "../../tools/systemd-run",
+    "systemctl": "../../tools/systemctl",
+    "time": "../../tools/time"
+  },
+  "path_map": {},
+  "path_roots": {
+    "tools": "../../tools/",
+    "inputs": "../../data/portable/",
+    "evidence": "../../data/portable/panthaica/",
+    "panthaica": "../../results_portable/panthaica",
+    "nuclear": "../../data/portable/nuclear_ils"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "out": "../../results_portable/chloroplast/prepare_inputs",
+  "source_dir": "../../data/portable/chloroplast/prepare_inputs/source",
+  "p19_dir": "../../data/portable/chloroplast/prepare_inputs/p19",
+  "iqtree": "../../tools/iqtree2"
+}

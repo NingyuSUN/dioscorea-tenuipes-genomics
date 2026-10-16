@@ -1,0 +1,5 @@
+{
+  "out": "../../results_portable/chloroplast/compare_published_edo",
+  "genotypes": "../../data/portable/chloroplast/compare_published_edo/published.gt.gz",
+  "cp_snps": "../../data/portable/chloroplast/compare_published_edo/cp.fa"
+}

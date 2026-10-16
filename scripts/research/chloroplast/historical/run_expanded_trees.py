@@ -3,6 +3,8 @@
 Dry plan by default; --execute must run on Linux in the declared 6GiB scope.
 """
 from pathlib import Path
+import getpass
+import portable_cli as portable
 import argparse, datetime, fcntl, hashlib, importlib.util, json, os, re, shutil, signal, socket, subprocess, sys, tarfile, time, traceback
 
 def sha(p):
@@ -86,35 +88,120 @@ def collect(out):
   for name in [*files,'ALL_OUTPUT_FILES.json']:tar.add(out/name,arcname=name,recursive=False)
  save(out/'COLLECTION_RECEIPT.json',{'status':'COMPLETE_COLLECTION','archive':str(archive),'bytes':archive.stat().st_size,'sha256':sha(archive),'file_count':len(files)+1,'archive_includes_final_run_status':True})
 
+def configure(config_path):
+ c=portable.configure(config_path, ('out','entry_config','sample_parent','frozen_manifest','python','loginctl','tree_lock'))
+ for key,default in [('entry_script','expanded_entry.py'),('legacy_runner','cp_tree_runner.py')]:
+  c[key]=portable.resolve(c['_config'],c[key]) if key in c else Path(__file__).with_name(default).resolve()
+ c['policy']['iqtree']=str(portable.resolve(c['_config'],c['policy']['iqtree']))
+ c['fixed_model']['fixed_model_file_remote']=str(portable.resolve(c['_config'],c['fixed_model']['fixed_model_file_remote']))
+ c['required_receipts']={k:str(portable.resolve(c['_config'],v)) for k,v in c['required_receipts'].items()}
+ c['path_map']={k:str(portable.resolve(c['_config'],v)) for k,v in c.get('path_map',{}).items()}
+ return c
+
+def entry_config(c):
+ ec=read(c['entry_config'])
+ ec['source_profiles']={profile:{k:str(portable.resolve(c['entry_config'],v)) for k,v in paths.items()}
+                        for profile,paths in ec['source_profiles'].items()}
+ ec['portable_path_map']=c['path_map']
+ return ec
+
+def entry_dependencies(c):
+ ec=entry_config(c);profile=c.get('source_profile','local');paths=ec['source_profiles'][profile]
+ inputs={k:Path(paths[k]) for k in ec['source_hashes']}
+ ledger=Path(paths['parent_ledger']);inputs['parent_ledger_receipt']=ledger/'LEDGER_RECEIPT.json'
+ inputs.update({'geometry/'+n:ledger/n for n in ec['geometry_hashes']})
+ for spec in ec['samples']:
+  root=c['sample_parent']/spec['run'];orig=Path(ec['default_sample_parent'])/spec['run']
+  mandatory=['fixed_projection/SAMPLE_BINDING.json','fixed_projection/PROJECTION_RECEIPT.json',
+             'fixed_ledger_v2/LEDGER_RECEIPT.json','fixed_ledger_v2/CONFIG.json',
+             'denovo_readback/STATUS.json','pilot_1m_qualityonly/STATUS.json','denovo_1m/STATUS.json']
+  for name in mandatory:inputs[spec['run']+'/'+name]=root/name
+  # Enumerate actual nested artifacts, not a directory mtime, for workflow invalidation.
+  if root.is_dir():
+   for f in sorted(root.rglob('*')):
+    if f.is_file():inputs[spec['run']+'/'+str(f.relative_to(root))]=f
+  ledger_config=root/'fixed_ledger_v2/CONFIG.json'
+  if ledger_config.is_file():
+   for key,record in read(ledger_config)['sources'].items():
+    q=Path(record['path'])
+    if q.is_relative_to(orig):q=root/q.relative_to(orig)
+    else:
+     for old,new in sorted(c['path_map'].items(),key=lambda kv:len(kv[0]),reverse=True):
+      if q.is_relative_to(Path(old)):q=Path(new)/q.relative_to(Path(old));break
+    inputs[spec['run']+'/external/'+key]=q
+ return inputs
+
+def plan(config_path):
+ c=configure(config_path)
+ inputs={'entry_script':c['entry_script'],'entry_config':c['entry_config'],'legacy_runner':c['legacy_runner'],
+         'fixed_model':c['fixed_model']['fixed_model_file_remote'],'frozen_manifest':c['frozen_manifest'],
+         'script':Path(__file__),'helper':Path(portable.__file__),**c['required_receipts']}
+ if c['entry_config'].is_file():inputs.update(entry_dependencies(c))
+ names=['RUN_STATUS.json','RESOURCE_BUDGET.json','FULL_RESULTS.tar.gz','COLLECTION_RECEIPT.json',
+        'ALL_OUTPUT_FILES.json','matrices/ENTRY_RECEIPT.json','matrices/main98.fixed_columns.fa',
+        'matrices/control95_without_new_tenuipes.fixed_columns.fa','matrices/control97_without_Hachi.fixed_columns.fa',
+        'matrices/fixed_regions.nex','matrices/fixed_models.nex',
+        'trees/main98/main.treefile','trees/control95_without_new_tenuipes/main.treefile']
+ return portable.contract(c['_config'],inputs,{n:c['out']/n for n in names},
+                          {'python':c['python'],'loginctl':c['loginctl'],'iqtree':c['policy']['iqtree']},c['out'],
+                          resources=c['resource_budget'],latest_new_stage_start=c['latest_new_stage_start'],required_threads=4)
+
+def prepare_entry(entry,c,out):
+ # Invoke the packaged entry's explicit algorithm API, keeping provenance receipts immutable.
+ ec=entry_config(c);profile=c.get('source_profile','local');samples,partial=entry.choose_samples(ec,None)
+ paths,base,base95=entry.validate_known(ec,profile);extras=[];provenance=[]
+ for spec in samples:
+  raw,proof=entry.validate_sample(ec,paths,c['sample_parent'],spec,base);extras.append(raw);provenance.append(proof)
+ matrices=entry.build_matrices(base95,extras,ec['hachi_tip'],ec['columns']);names=entry.matrix_names(samples,partial)
+ require(all(data.startswith(base) for data in matrices.values()),'Original93 bytes changed')
+ result={'status':'ALL_SELECTED_INPUTS_VALIDATED_MATRICES_NOT_WRITTEN','tree_run':False,'scientific_review_passed':False,
+         'config_sha256':sha(c['entry_config']),'selected_samples':[x['name'] for x in samples],
+         'omitted_samples':[],'explicit_partial_mode':False,'panels':names,'columns':ec['columns'],
+         'unknown_N_is_never_reference_filled':True,'all3_required_by_default':True,'source_profile':profile,
+         'sample_parent':str(c['sample_parent']),'old93_bytes_unchanged':True,'control95_sha256':entry.digest(base95),
+         'sample_provenance':provenance,'matrix_hashes':{names[k]:entry.digest(v) for k,v in matrices.items()}}
+ focal=[{'tip':'DT_local_path2','name':'hime2','source':'frozen original93','row_from':paths['original93']},
+        {'tip':ec['hachi_tip'],'name':'Hachi-1','source':'DRR351751 / SAMD00444457','row_from':paths['hachi']},
+        {'tip':ec['kita_tip'],'name':'Kita1','source':'Natsume2022 author-declared public CP','row_from':paths['kita']},
+        {'tip':'OQ525999.1','name':'tokoro OQ525999.1','source':'Hu2023 public CP','row_from':paths['original93']}]
+ focal += [{'tip':x['tip'],'name':x['name'],'source':x['run']+' / '+x['sample_accession'],'included':True,
+            'row_from':next(p['projection_path'] for p in provenance if p['name']==x['name']),'author_alias':x['author_alias']} for x in samples]
+ result['focal_tip_provenance']=focal
+ entry.write_outputs(out,matrices,names,(Path(paths['parent_ledger'])/'regions.nex').read_bytes(),focal,result,partial)
+
 def main():
- p=argparse.ArgumentParser(description=__doc__);p.add_argument('--config',type=Path,default=Path(__file__).with_name('BRIDGE_CONFIG.json'));p.add_argument('--run-name',required=True);p.add_argument('--subset',choices=['Mie1,Utsu']);p.add_argument('--latest-start',default='2026-10-01T00:00:00+00:00',help='Timezone-aware deadline for new stages only; default09JST');p.add_argument('--execute',action='store_true');a=p.parse_args()
- require(re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,40}',a.run_name),'Invalid run name');selected(a.subset)
- if a.latest_start:require(datetime.datetime.fromisoformat(a.latest_start).tzinfo is not None,'latest-start needs timezone')
- c=read(a.config);out=Path(c['remote_root'])/'cp_expansion_entry/tree_runs_recovery03'/a.run_name;entrydir=Path(c['entry_dir']);entrycmd=[c['python'],str(entrydir/'prepare_expanded_cp.py'),'--config',str(entrydir/'ENTRY_CONFIG.json'),'--source-profile','remote','--execute','--out',str(out/'matrices')]
- if a.subset:entrycmd+=['--subset',a.subset]
- plan={'status':'PREPARED_NO_DISPATCH','output':str(out),'selected_samples':selected(a.subset),'entry_command_once':entrycmd,'tree_panels':['main97_partial_Mie1_Utsu' if a.subset else 'main98','control95_without_new_tenuipes'],'no_Hachi_removed_tree':True,'resources':{'memory_bytes':6442450944,'swap_bytes':0,'cpus':4},'tree_lock':c['tree_lock'],'scheduling_revision':c['scheduling_revision'],'planned_resource_budget':c['resource_budget'],'latest_new_stage_start':a.latest_start,'formal_tree_hours':'Two-tree planning range2-8hours, uncalibrated; no guarantee before09JST; previous150s pilots do not calibrate bootstrap/BNNI.'}
- if not a.execute:print(json.dumps(plan,indent=2));return
- require(socket.gethostname()=='compute-host-1ccbf7da4d','Linux compute-host-1ccbf7da4d execution required')
- for path,h in read(Path(__file__).with_name('FROZEN_MANIFEST.json'))['sha256'].items():require(sha(path)==h,'Frozen new bridge changed: '+path)
- require(a.latest_start==c['latest_new_stage_start'],'Approved09JST new-stage deadline changed')
+ p=portable.parser(__doc__);p.add_argument('--subset',choices=['Mie1,Utsu']);p.add_argument('--latest-start',help='Override must exactly equal the configured timezone-aware deadline');a=p.parse_args()
+ selected(a.subset);c=configure(a.config);a.latest_start=a.latest_start or c['latest_new_stage_start']
+ require(datetime.datetime.fromisoformat(a.latest_start).tzinfo is not None,'latest-start needs timezone')
+ out=c['out'];checked=portable.preflight(plan(a.config))
+ require(c['tree_lock'].parent.is_dir(),'Tree lock parent directory must exist')
+ require(not c['tree_lock'].is_relative_to(out) and str(c['tree_lock']) not in checked['inputs']+checked['tools'],'Tree lock must be separate from inputs and results')
+ if not a.execute:portable.emit(checked);return
+ require(sys.platform.startswith('linux'),'Linux cgroup execution required')
+ if c.get('required_hostname'):require(socket.gethostname()==c['required_hostname'],'Configured execution hostname differs')
+ freeze=read(c['frozen_manifest']);bound=set()
+ for path,h in freeze['sha256'].items():
+  f=portable.resolve(c['frozen_manifest'],path);bound.add(f);require(sha(f)==h,'Frozen bridge changed: '+str(f))
+ require({Path(__file__).resolve(),Path(portable.__file__).resolve(),c['_config'],c['entry_script'],c['entry_config'],c['legacy_runner']}<=bound,'Freeze must bind bridge, helper, configuration, entry and legacy implementations')
+ require(a.latest_start==c['latest_new_stage_start'],'Configured new-stage deadline changed')
  require(not out.exists(),'Fresh output required; no resume/overwrite')
- for f,key in [(entrydir/'prepare_expanded_cp.py','entry_code_sha256'),(entrydir/'ENTRY_CONFIG.json','entry_config_sha256'),(Path(c['legacy_runner']),'legacy_runner_sha256')]:require(sha(f)==c[key],'Sealed code/config changed: '+str(f))
+ # The explicit freeze above binds all code and entry configuration before imports.
  require(sha(c['policy']['iqtree'])==c['policy']['iqtree_sha256'],'IQ-TREE binary changed')
- legacy=load('frozen_cp_tree_runner',c['legacy_runner']);entry=load('sealed_cp_entry',entrydir/'prepare_expanded_cp.py');resources=legacy.cgroup_check(c['policy']);require(resources['memory_max_bytes']==6442450944,'Exactly6GiB required');resources['affinity']=pin_tree_cpus(c,legacy)
- require(shutil.disk_usage(Path(c['remote_root'])).free>=c['policy']['minimum_free_disk_bytes'],'Insufficient disk')
- out.mkdir(parents=True);state={'status':'WAITING_TREE_LOCK','started_epoch':time.time(),'pid':os.getpid(),'start_ticks':Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19],'plan':plan,'resources':resources,'jobs':[],'bridge_code_sha256':sha(__file__),'bridge_config_sha256':sha(a.config)};save(out/'RUN_STATUS.json',state)
+ legacy=load('frozen_cp_tree_runner',c['legacy_runner']);entry=load('sealed_cp_entry',c['entry_script']);resources=legacy.cgroup_check(c['policy']);require(resources['memory_max_bytes']==6442450944,'Exactly6GiB required');resources['affinity']=pin_tree_cpus(c,legacy)
+ require(shutil.disk_usage(portable.existing_parent(out.parent)).free>=c['policy']['minimum_free_disk_bytes'],'Insufficient disk')
+ out.mkdir(parents=True,exist_ok=False);state={'status':'WAITING_TREE_LOCK','started_epoch':time.time(),'pid':os.getpid(),'start_ticks':Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19],'plan':checked,'resources':resources,'jobs':[],'bridge_code_sha256':sha(__file__),'bridge_config_sha256':sha(a.config)};save(out/'RUN_STATUS.json',state)
  def interrupted(signum,frame):raise InterruptedError('Signal '+str(signum)+'; preserve outputs')
  signal.signal(signal.SIGTERM,interrupted)
  try:
   with Path(c['tree_lock']).open('a') as lock:
    fcntl.flock(lock,fcntl.LOCK_EX);before_deadline(a.latest_start);state['prerequisites']=prerequisite_check(c,a.subset)
    state['resource_budget']=resource_budget_snapshot(c);save(out/'RUN_STATUS.json',state);save(out/'RESOURCE_BUDGET.json',state['resource_budget']);require(state['resource_budget']['passes'],'Startup memory budget insufficient; preserve plan, no entry/tree and no cap change')
-   linger=subprocess.run(['loginctl','show-user','private-organization','-p','Linger','--value'],capture_output=True,text=True,check=True,timeout=20).stdout.strip();require(linger=='yes','Linger must be enabled before detached run');state['linger']=linger;state['status']='RUNNING_ENTRY';save(out/'RUN_STATUS.json',state)
-   with (out/'entry.stdout').open('x') as stdout,(out/'entry.stderr').open('x') as stderr:subprocess.run(entrycmd,stdout=stdout,stderr=stderr,check=True)
-   receipt,panels,proof=verify_entry(entry,entrydir/'ENTRY_CONFIG.json',out/'matrices',a.subset);state['entry_receipt_sha256']=sha(out/'matrices/ENTRY_RECEIPT.json');state['matrix_proof']=proof
+   linger=subprocess.run([str(c['loginctl']),'show-user',c.get('systemd_user',getpass.getuser()),'-p','Linger','--value'],capture_output=True,text=True,check=True,timeout=20).stdout.strip();require(linger=='yes','Linger must be enabled before detached run');state['linger']=linger;state['status']='RUNNING_ENTRY';save(out/'RUN_STATUS.json',state)
+   prepare_entry(entry,c,out/'matrices')
+   receipt,panels,proof=verify_entry(entry,c['entry_config'],out/'matrices',a.subset);state['entry_receipt_sha256']=sha(out/'matrices/ENTRY_RECEIPT.json');state['matrix_proof']=proof
    model=Path(c['fixed_model']['fixed_model_file_remote']);require(sha(model)==c['fixed_model']['fixed_model_file_sha256'],'Frozen model file changed');shutil.copyfile(model,out/'matrices/fixed_models.nex');require(sha(out/'matrices/fixed_models.nex')==c['fixed_model']['fixed_model_file_sha256'],'Model copy mismatch')
    provenance=out/'code_provenance';provenance.mkdir()
-   for f in [Path(__file__),a.config,entrydir/'prepare_expanded_cp.py',entrydir/'ENTRY_CONFIG.json',Path(c['legacy_runner'])]:shutil.copyfile(f,provenance/f.name)
+   for i,f in enumerate([Path(__file__),a.config,c['entry_script'],c['entry_config'],Path(c['legacy_runner']),Path(portable.__file__)]):shutil.copyfile(f,provenance/(str(i)+'_'+f.name))
    (out/'trees').mkdir();state['commands']=[legacy.argv(n,out/'matrices',out/'trees','full',c['policy']) for n in panels];state['status']='RUNNING_TREES';save(out/'RUN_STATUS.json',state)
    for panel in panels:
     before_deadline(a.latest_start);require(sha(out/'matrices'/(panel+'.fixed_columns.fa'))==proof[panel]['sha256'],'Frozen matrix changed before tree');require(sha(out/'matrices/fixed_models.nex')==c['fixed_model']['fixed_model_file_sha256'],'Model changed before tree')

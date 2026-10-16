@@ -1,0 +1,9 @@
+{
+  "genome": "../../data/portable/genome.fa",
+  "genome_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "gff": "../../data/portable/alignments.gff",
+  "query_fasta": "../../data/portable/historical_173.faa",
+  "alignment_status": "../../data/portable/alignment_STATUS.json",
+  "query_manifest": "../../data/portable/QUERY_MANIFEST.json",
+  "outdir": "../../results_portable/cds_translation"
+}

@@ -3,10 +3,16 @@
 No search, alignment, rescue, annotation editing, or genome download.
 """
 from pathlib import Path
+import sys
+if not __debug__:
+    raise RuntimeError('Optimized Python disables required scientific assertions; run without -O.')
+_HELPER_DIR = str(Path(__file__).resolve().parent)
+if _HELPER_DIR not in sys.path:
+    sys.path.insert(0, _HELPER_DIR)
 import json,hashlib,collections,resource,time,datetime,os,traceback
-D=Path(__file__).resolve().parent;I=D.parent
-GENOME=Path('workspace/wgs/genome.fa')
+D=GENOME=GFF=QUERY=ALIGNMENT_STATUS=QUERY_MANIFEST=None
 EXPECTED='36fecc3e8b3054728d9779d22d61957062fd914bf24cd04f09e27d363d97c87b'
+DEFAULT_EXPECTED=EXPECTED
 def now():return datetime.datetime.now(datetime.timezone.utc).isoformat()
 def sha(p):
  h=hashlib.sha256()
@@ -15,7 +21,8 @@ def sha(p):
  return h.hexdigest()
 def save(n,v):(D/n).write_text(json.dumps(v,ensure_ascii=False,indent=2)+'\n')
 def rc(b):return b.translate(bytes.maketrans(b'ACGTNacgtn',b'TGCANtgcan'))[::-1]
-def main():
+def execute():
+ D.mkdir(parents=True,exist_ok=False)
  assert not (D/'STATUS.json').exists(),'Existing attempt; never overwrite/retry'
  started=time.monotonic();status={'status':'RUNNING_COORDINATE_ONLY_CDS_TRANSLATION','started_utc':now(),'pid':os.getpid(),'single_thread_python':True}
  save('STATUS.json',status)
@@ -28,7 +35,7 @@ def main():
   if limits['cpu.max'] is not None:
    quota,period=map(int,limits['cpu.max'].split());assert quota<=period
   save('CGROUP_OBSERVED.json',{'path':str(gp),'limits':limits,'process_affinity':sorted(os.sched_getaffinity(0))})
-  gff=I/'alignments.gff';queryfile=I/'historical_173.faa';status0=json.loads((I/'STATUS.json').read_text());manifest=json.loads((I/'QUERY_MANIFEST.json').read_text())
+  gff=GFF;queryfile=QUERY;status0=json.loads(ALIGNMENT_STATUS.read_text());manifest=json.loads(QUERY_MANIFEST.read_text())
   assert status0['exit_code']==0 and sha(gff)==status0['output_sha256'] and sha(queryfile)==manifest['query_sha256']
   queries={}
   for block in queryfile.read_text().split('>')[1:]:
@@ -102,11 +109,37 @@ def main():
    exact=full and core==q and len(dna)%3==0 and normal and phaseok
    results.append({'alignment_id':aid,'query':a['query'],'rank':a['rank'],'contig':a['contig'],'strand':a['strand'],'CDS_segments':len(a['CDS']),'CDS_nt_count_after_first_phase':len(dna),'first_phase_bases_removed_once':first_phase,'trailing_nt_not_translated':len(dna)%3,'phase_consistency_all':phaseok,'phase_checks':phases,'non_ACGT_CDS_nt_count':sum(x not in b'ACGT' for x in dna),'full_query_span':full,'translated_length_including_terminal_stop':len(prot),'translated_terminal_stop':prot.endswith('*'),'translated_internal_stop_count':core.count('*'),'translated_X_count':prot.count('X'),'translated_protein':prot,'translation_core_sha256':hashlib.sha256(core.encode()).hexdigest(),'CDS_nt_sha256':hashlib.sha256(dna).hexdigest(),'query_sha256':hashlib.sha256(q.encode()).hexdigest(),'translation_core_equals_full_query':core==q,'unambiguous_full_length_exact':exact,'translation_core_equals_STA_core':core==stacore,'splice_junctions':junctions,'non_GT_AG_junctions':sum(x['donor']+x['acceptor']!='GTAG' for x in junctions)})
   primary=[r for r in results if r['rank']==1]
-  summary={'status':'COMPLETE_COORDINATE_ONLY_GENOMIC_TRANSLATION','genome_sha256':h.hexdigest(),'genome_total_nt':nt,'genome_contigs':len(seen),'alignments':len(results),'primary_alignments':len(primary),'primary_unambiguous_full_length_exact':sum(r['unambiguous_full_length_exact'] for r in primary),'all_unambiguous_full_length_exact':sum(r['unambiguous_full_length_exact'] for r in results),'primary_translation_equals_STA_core':sum(r['translation_core_equals_STA_core'] for r in primary),'all_translation_equals_STA_core':sum(r['translation_core_equals_STA_core'] for r in results),'primary_phase_inconsistent':[r['query'] for r in primary if not r['phase_consistency_all']],'primary_trailing_nt_queries':[r['query'] for r in primary if r['trailing_nt_not_translated']],'primary_internal_stop_queries':[r['query'] for r in primary if r['translated_internal_stop_count']],'primary_non_ACGT_queries':[r['query'] for r in primary if r['non_ACGT_CDS_nt_count']],'source_sha256':{str(gff):sha(gff),str(queryfile):sha(queryfile),str(D/'genomic_cds_translation.py'):sha(D/'genomic_cds_translation.py')},'limits':'Genomic extraction and standard-code translation are independent of miniprot STA. Coordinates/splice structure remain selected by miniprot, so this is not an independent alignment or an authentication of sample identity.'}
+  summary={'status':'COMPLETE_COORDINATE_ONLY_GENOMIC_TRANSLATION','genome_sha256':h.hexdigest(),'genome_total_nt':nt,'genome_contigs':len(seen),'alignments':len(results),'primary_alignments':len(primary),'primary_unambiguous_full_length_exact':sum(r['unambiguous_full_length_exact'] for r in primary),'all_unambiguous_full_length_exact':sum(r['unambiguous_full_length_exact'] for r in results),'primary_translation_equals_STA_core':sum(r['translation_core_equals_STA_core'] for r in primary),'all_translation_equals_STA_core':sum(r['translation_core_equals_STA_core'] for r in results),'primary_phase_inconsistent':[r['query'] for r in primary if not r['phase_consistency_all']],'primary_trailing_nt_queries':[r['query'] for r in primary if r['trailing_nt_not_translated']],'primary_internal_stop_queries':[r['query'] for r in primary if r['translated_internal_stop_count']],'primary_non_ACGT_queries':[r['query'] for r in primary if r['non_ACGT_CDS_nt_count']],'source_sha256':{str(gff):sha(gff),str(queryfile):sha(queryfile),str(Path(__file__)):sha(Path(__file__))},'limits':'Genomic extraction and standard-code translation are independent of miniprot STA. Coordinates/splice structure remain selected by miniprot, so this is not an independent alignment or an authentication of sample identity.'}
   save('CDS_TRANSLATION.json',{'summary':summary,'records':results});status.update(status='COMPLETE_EXIT0',summary=summary,output_sha256=sha(D/'CDS_TRANSLATION.json'),output_bytes=(D/'CDS_TRANSLATION.json').stat().st_size)
  except BaseException:
   status.update(status='FAILED_NO_AUTOMATIC_RETRY',error=traceback.format_exc());raise
  finally:
   status.update(finished_utc=now(),elapsed_seconds=time.monotonic()-started,peak_self_rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss);save('STATUS.json',status)
  print(json.dumps({k:v for k,v in status.get('summary',{}).items() if k!='source_sha256'}))
-if __name__=='__main__':main()
+
+def configure(config, base):
+ from _nuclear_cli import path_value, require_file, expected_hash, fresh_output, report_plan
+ global D,GENOME,GFF,QUERY,ALIGNMENT_STATUS,QUERY_MANIFEST,EXPECTED
+ paths={key:require_file(path_value(config,key,base)) for key in ['genome','gff','query_fasta','alignment_status','query_manifest']}
+ GENOME,GFF,QUERY,ALIGNMENT_STATUS,QUERY_MANIFEST=(paths[key] for key in ['genome','gff','query_fasta','alignment_status','query_manifest'])
+ EXPECTED=config.get('genome_sha256',DEFAULT_EXPECTED);expected_hash(GENOME,EXPECTED,'genome')
+ D=fresh_output(path_value(config,'outdir',base),paths.values())
+ status=json.loads(ALIGNMENT_STATUS.read_text());manifest=json.loads(QUERY_MANIFEST.read_text())
+ assert status['exit_code']==0 and sha(GFF)==status['output_sha256'] and sha(QUERY)==manifest['query_sha256']
+ queries={block.splitlines()[0].split()[0]:''.join(block.splitlines()[1:]) for block in QUERY.read_text().split('>')[1:]}
+ assert len(queries)==173 and sum(map(len,queries.values()))==122636
+ return report_plan('genomic_cds_translation.py',paths,{'status':D/'STATUS.json','resources':D/'CGROUP_OBSERVED.json','translation':D/'CDS_TRANSLATION.json'},['Linux cgroup v2'],
+                    execution_requires='Effective memory.max <= 1 GiB, swap 0, at most one CPU quota, and one-CPU affinity; enforced again during execution.')
+
+def plan(config_path):
+    """Return a read-only, JSON-compatible artifact and dependency plan."""
+    config_path=Path(config_path).resolve();return configure(json.loads(config_path.read_text()),config_path.parent)
+
+
+def main(argv=None):
+ from _nuclear_cli import read_config
+ config,base,run=read_config(__doc__,argv);print(json.dumps(configure(config,base),indent=2))
+ if run:execute()
+ return 0
+
+if __name__=='__main__':raise SystemExit(main())

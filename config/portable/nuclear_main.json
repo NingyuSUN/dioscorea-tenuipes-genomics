@@ -1,0 +1,13 @@
+{
+  "work_root": "../../results_portable/nuclear",
+  "taxa_json": "../../data/portable/taxa.json",
+  "annotation_fasta": "../../data/portable/WT42.faa",
+  "annotation_metadata": "../../data/portable/WT42_metadata.json",
+  "busco_python": "../../tools/busco/bin/python",
+  "busco_script": "../../tools/busco/bin/busco",
+  "lineage": "../../data/portable/embryophyta_odb10",
+  "download_path": "../../data/portable/busco_cache",
+  "mafft": "../../tools/mafft",
+  "iqtree": "../../tools/iqtree2",
+  "threads": 8
+}

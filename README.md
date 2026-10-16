@@ -22,7 +22,7 @@ Code for nuclear genome assembly and annotation, population genomics, organelle 
 | Nuclear lineage-sorting models | [research/nuclear_ils](docs/SCRIPT_CATALOG.md#nuclear-multispecies-coalescent-simulations) | Generate conditional nuclear gene histories and re-estimate their quartet relationships. |
 | Chloroplast lineage-sorting models | [research/chloroplast_ils](docs/SCRIPT_CATALOG.md#conditional-chloroplast-genealogies-and-distance-scenarios) | Simulate linked plastid genealogies and sequence-distance scenarios, then check them analytically. |
 
-The catalogue gives a separate purpose for **each script**, including helpers and historical reference code. [The later-analysis source map](workflow/research/SOURCE_MAP.csv) records source stages, hashes and portability changes.
+The catalogue gives a separate purpose for **each script**, including helpers and configurable historical stages. [The later-analysis source map](workflow/research/SOURCE_MAP.csv) records source stages, hashes and portability changes.
 
 ## Population workflow
 
@@ -39,7 +39,7 @@ snakemake research_all -n --cores 4 \
   --configfile config/config.yaml config/research.yaml
 ```
 
-Paths in the configuration files are examples. Later targets cover locus trees/concordance, regional and balanced-sample FST, and conditional chloroplast simulation/validation. The bounded chloroplast tree driver is a separate optional target. See [later workflow contracts](workflow/research/README.md) for commands and boundaries.
+Paths in the configuration files are examples. Later targets cover locus trees/concordance, regional and balanced-sample FST, and conditional chloroplast simulation/validation. The bounded chloroplast tree driver is a separate optional target. The [22 configured historical stages](workflow/portable/README.md) add explicit preparation/comparison chains and safe preflight. See [later workflow contracts](workflow/research/README.md) for commands and boundaries.
 
 ## Comparative analyses
 
@@ -51,7 +51,7 @@ Nuclear and chloroplast relationships are evaluated separately. Conditional simu
 
 [software_versions.md](software_versions.md) records the software and package versions actually found in run logs and environment receipts, including stage-specific differences. [The evidence table](docs/provenance/software_versions.tsv) supplies version excerpts and source hashes. Environment templates and this release's code-check environment are identified separately.
 
-The [2026-09-24 verification record](docs/WORKFLOW_VERIFICATION.md) describes the earlier population replay. [The current release checks](docs/PUBLIC_CODE_RELEASE_2026-10-16.md) cover code, small artificial tests, documentation and dry-run planning. No research analysis was rerun for this update.
+The [2026-09-24 verification record](docs/WORKFLOW_VERIFICATION.md) describes the earlier population replay. [The source release checks](docs/PUBLIC_CODE_RELEASE_2026-10-16.md) and [historical-script portability checks](docs/PORTABLE_SCRIPTS_2026-10-16.md) cover code, small artificial tests, documentation and dry-run planning. No research analysis was rerun for this update.
 
 A few older scripts are retained for inspection: **22** relabels chromosomes without a full coordinate transformation; **24** reconstructs incomplete hints and is unsuitable for annotation; **27** is a repeat-analysis template whose resource settings need review. Current contig-coordinate population analyses use **32–55**; transcript-structure evidence uses **29**. Reference-guided scaffolds remain candidate structures. Mitochondrial assembly attempts do not constitute a complete mitochondrial reference.
 

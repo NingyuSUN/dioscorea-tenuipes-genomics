@@ -1,0 +1,4 @@
+{
+  "plan": "../../data/portable/population_sources/full_panel_plan.json",
+  "outdir": "../../results_portable/full_panel"
+}

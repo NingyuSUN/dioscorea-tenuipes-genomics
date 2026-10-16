@@ -2,13 +2,38 @@
 """Create strict paired shared10 matrices; never start inference."""
 from pathlib import Path
 import argparse,csv,json,shutil
-from source_au_common import *
-ROOT=Path('workspace/wgs/dt_research_p57_20260930/cp_source_au')
-HIST=Path('workspace/wgs/dt_research_p57_20260930/topology/full_01/cp')
-IQ=Path('workspace/wgs/dt_nuclear_expanded_20260915/tools/bin/iqtree2')
+import portable_cli as portable
+def configure(config_path):
+    return portable.configure(config_path, ('design_dir','source_dir','historical_dir','iqtree','out'))
+
+def plan(config_path):
+    c=configure(config_path);w=c['design_dir'];src=c['source_dir'];hist=c['historical_dir']
+    inputs={n:w/n for n in ['INPUT_METADATA.json','DESIGN.json','joint.partitions.nex',
+                            'HT_cherry.constraint.nwk','CP_TGZ_split.constraint.nwk']}
+    inputs.update({n:src/n for n in ['Kita_OQ_shared.control.fa','Kita_OQ_shared.replacement.fa','Kita_OQ_shared.columns.tsv']})
+    if (w/'INPUT_METADATA.json').is_file():
+        for n in json.loads((w/'INPUT_METADATA.json').read_text())['source_file_hashes']:
+            if Path(n).is_absolute() or '..' in Path(n).parts: raise ValueError('Unsafe source manifest member')
+            inputs['source/'+n]=src/n
+    if (w/'DESIGN.json').is_file():
+        for n in json.loads((w/'DESIGN.json').read_text()).get('constraints',{}):
+            if Path(n).name!=n or n in ('.','..'): raise ValueError('Unsafe constraint filename')
+            inputs[n+'.constraint.nwk']=w/(n+'.constraint.nwk')
+    inputs.update({n:hist/n for n in ['candidates.nwk','CANDIDATE_MANIFEST.json']})
+    inputs.update(script=Path(__file__),helper=Path(__file__).with_name('source_au_common.py'))
+    names=['OQ_joint.fa','Kita_joint.fa','joint.partitions.nex','HT_cherry.constraint.nwk',
+           'CP_TGZ_split.constraint.nwk','INPUT_METADATA.json','DESIGN.json','joint.columns.tsv',
+           'historical.candidates.nwk','historical.CANDIDATE_MANIFEST.json','joint.blocks.json','CONFIG.json','PREPARED.json']
+    return portable.contract(c['_config'],inputs,{n:c['out']/n for n in names},
+                             {'iqtree':c['iqtree']},c['out'],taxa=10,columns=122234)
+
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--out',type=Path,default=ROOT/'inputs');ap.add_argument('--execute-copy',action='store_true');a=ap.parse_args()
-    w=Path(__file__).resolve().parent;meta=json.loads((w/'INPUT_METADATA.json').read_text());design=json.loads((w/'DESIGN.json').read_text());src=Path(meta['source_dir'])
+    a=portable.parser(__doc__).parse_args();checked=portable.preflight(plan(a.config))
+    if not a.execute: portable.emit(checked); return
+    from source_au_common import sha, fasta, topology_id, has_split, save
+    import hashlib
+    c=configure(a.config);w=c['design_dir'];src=c['source_dir'];HIST=c['historical_dir'];IQ=c['iqtree'];a.out=c['out']
+    meta=json.loads((w/'INPUT_METADATA.json').read_text());design=json.loads((w/'DESIGN.json').read_text())
     for n,h in meta['source_file_hashes'].items():assert sha(src/n)==h
     old=fasta(src/'Kita_OQ_shared.control.fa');new=fasta(src/'Kita_OQ_shared.replacement.fa')
     assert len(old)==len(new)==93 and all(old[k]==new[k] for k in set(old)&set(new))
@@ -33,7 +58,6 @@ def main():
     receipt={'status':'PREPARED_PAIRED_SOURCE_INPUTS_NO_INFERENCE','columns':122234,'taxa_per_variant':10,'all_other_nine_sequences_identical':True,
              'source_metadata_sha256':sha(w/'INPUT_METADATA.json'),'design_sha256':sha(w/'DESIGN.json'),'prepare_script_sha256':sha(__file__),
              'variants':meta['prospective_matrix_hashes_and_rows'],'source_files':meta['source_file_hashes'],'historical_candidate_count':2,'nuclear_input_or_results_changed':False}
-    if not a.execute_copy:print(json.dumps(receipt,indent=2));return
     a.out.mkdir(parents=True,exist_ok=False)
     for label,text in variants.items():(a.out/(label+'.fa')).write_text(text)
     for n in ['joint.partitions.nex','HT_cherry.constraint.nwk','CP_TGZ_split.constraint.nwk','INPUT_METADATA.json','DESIGN.json']:shutil.copy2(w/n,a.out/n)
