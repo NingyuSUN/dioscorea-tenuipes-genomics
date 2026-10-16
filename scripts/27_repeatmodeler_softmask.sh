@@ -1,4 +1,5 @@
 #!/bin/bash
+# TEMPLATE: review RepeatMasker -pa batch count versus actual CPU allocation before execution; no completed repeat analysis is claimed here.
 # De novo repeat library + soft-masking of the Kita1-scaffolded assembly.
 # The soft-masked output is the required input for re-running BRAKER: the
 # previous annotation was run with --softmasking on a genome that contained

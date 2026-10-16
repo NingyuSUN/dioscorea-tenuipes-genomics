@@ -35,3 +35,6 @@ jobs:
 
       - name: Snakemake dry run, lint and frozen-directory guard
         run: bash workflow/tests/dryrun.sh
+
+      - name: Later-analysis DAG and staging guards (no analysis)
+        run: python workflow/tests/research_dryrun.py

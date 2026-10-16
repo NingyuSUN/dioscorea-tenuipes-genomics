@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1190" viewBox="0 0 1680 1190" role="img" aria-labelledby="title description">
+<title id="title">Comparative phylogeny · two evidence streams</title>
+<desc id="description">Nuclear and chloroplast analyses remain distinct before paired, assumption-aware interpretation. Solid teal arrows denote the configured workflow. Dashed amber arrows denote separate historical scripts or templates. Dotted blue arrows denote research data flow without an automation claim.</desc>
+<defs>
+  <marker id="configured" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,5 L0,10 Z" fill="#087D86"/></marker>
+  <marker id="historical" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,5 L0,10 Z" fill="#A4660A"/></marker>
+  <marker id="research" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,5 L0,10 Z" fill="#647D92"/></marker>
+</defs>
+<style>text {font-family:Arial,Helvetica,sans-serif;fill:#17344F;} .subtitle {fill:#52687B;} .note {fill:#52687B;} </style>
+<rect width="1680" height="1190" fill="white"/>
+<text x="64" y="66" font-size="36" font-weight="700" text-anchor="start" style="fill:#17344F">Comparative phylogeny · two evidence streams</text>
+<text x="64" y="108" font-size="21" font-weight="400" text-anchor="start" style="fill:#52687B">Nuclear and chloroplast analyses remain distinct before paired, assumption-aware interpretation.</text>
+<path d="M64 134 H1616" stroke="#CCD7E0" stroke-width="2"/>
+<rect x="64" y="165" width="750" height="485" rx="18" fill="#EFF8F8"/>
+<text x="88" y="199" font-size="18" font-weight="700" text-anchor="start" style="fill:#087D86">NUCLEAR EVIDENCE</text>
+<rect x="866" y="165" width="750" height="485" rx="18" fill="#F6F8FB"/>
+<text x="890" y="199" font-size="18" font-weight="700" text-anchor="start" style="fill:#17344F">CHLOROPLAST EVIDENCE</text>
+<rect x="88" y="226" width="702" height="105" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M102 227 H776" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="110" y="261" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Nuclear marker proteins</text>
+<text x="110" y="290" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Ortholog definitions and source selection</text>
+<rect x="890" y="226" width="702" height="105" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M904 227 H1578" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="912" y="261" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Chloroplast sequences</text>
+<text x="912" y="290" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Sequence identity, source provenance and input selection</text>
+<rect x="88" y="385" width="702" height="105" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M102 386 H776" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="110" y="420" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Marker alignments + trees</text>
+<text x="110" y="449" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Alignment / trimming choices; gene and summary trees</text>
+<rect x="890" y="385" width="702" height="105" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M904 386 H1578" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="912" y="420" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Chloroplast alignment + tree</text>
+<text x="912" y="449" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Alignment choices and topology estimates</text>
+<path d="M439 331 L439 385" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<path d="M1241 331 L1241 385" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<rect x="88" y="543" width="335" height="82" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M102 544 H409" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="110" y="578" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Gene concordance</text>
+<text x="110" y="607" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Across-marker agreement</text>
+<rect x="455" y="543" width="335" height="82" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M469 544 H776" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="477" y="578" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Matched comparison</text>
+<text x="477" y="607" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">D. panthaica marker sets</text>
+<rect x="890" y="543" width="335" height="82" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M904 544 H1211" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="912" y="578" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Topology sensitivity</text>
+<text x="912" y="607" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Alternative relationships</text>
+<rect x="1257" y="543" width="335" height="82" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M1271 544 H1578" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="1279" y="578" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Input sensitivity</text>
+<text x="1279" y="607" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Source choice + masking</text>
+<path d="M439 490 L439 518 L255 518 L255 543" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<path d="M439 518 L623 518 L623 543" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<path d="M1241 490 L1241 518 L1057 518 L1057 543" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<path d="M1241 518 L1424 518 L1424 543" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<rect x="405" y="726" width="870" height="123" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M419 727 H1261" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="427" y="761" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Paired interpretation of nuclear and plastid evidence</text>
+<text x="427" y="790" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Compare supported relationships and sensitivity patterns.</text>
+<text x="427" y="819" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Keep source, marker, alignment and topology uncertainty explicit.</text>
+<path d="M255 625 L255 681 L840 681 L840 726" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<path d="M623 625 L623 681" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7"/>
+<path d="M1057 625 L1057 681 L840 681" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7"/>
+<path d="M1424 625 L1424 681 L1057 681" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7"/>
+<rect x="405" y="907" width="870" height="123" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M419 908 H1261" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="427" y="942" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Conditional incomplete lineage sorting (ILS) scenarios</text>
+<text x="427" y="971" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Simulations and analytic checks under specified assumptions.</text>
+<text x="427" y="1000" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Not a calibrated probability that ILS caused the observed pattern.</text>
+<path d="M840 849 L840 907" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<path d="M64 1076 H1616" stroke="#CCD7E0" stroke-width="1.5"/>
+<path d="M64 1100 L119 1100" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<text x="136" y="1107" font-size="18" font-weight="400" text-anchor="start" style="fill:#17344F">Research data flow only</text>
+<text x="580" y="1107" font-size="18" font-weight="400" text-anchor="start" style="fill:#52687B">Automation status and input contracts: see workflow documentation.</text>
+<text x="64" y="1145" font-size="18" font-weight="400" text-anchor="start" style="fill:#52687B">Method map only. Arrows do not certify completed runs, biological validity or a causal mechanism.</text>
+</svg>

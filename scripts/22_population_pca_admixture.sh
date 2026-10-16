@@ -1,5 +1,6 @@
 \
 #!/usr/bin/env bash
+# HISTORICAL: chromosome-label replacement is not a coordinate transformation. Use scripts 32–34 for the current contig-coordinate workflow.
 set -euo pipefail
 
 # =========================================================

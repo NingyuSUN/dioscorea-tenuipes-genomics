@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-Repair the StringTie-derived hints file for BRAKER.
+HISTORICAL, UNSUITABLE FOR ANNOTATION: reconstruct hints from incomplete records.
+
+Use 29_prepare_rna_evidence.py with complete transcript structures instead.
+The old reconstruction below is retained for inspection, not endorsed as a fix.
 
 The original file writes every record with feature type "hint", which BRAKER
 does not recognise, so every hint was discarded with a neutral bonus/malus.

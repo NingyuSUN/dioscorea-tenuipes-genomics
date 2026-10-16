@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Public accession discovery through installed life-sciences Entrez skill and ENA.
+"""Public accession discovery through a user-supplied Entrez API adapter and ENA.
 No raw reads downloaded. Stores compact API responses and an accession inventory.
 """
 import argparse,datetime,json,subprocess,urllib.parse,urllib.request,csv

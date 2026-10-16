@@ -8,7 +8,7 @@ The `Snakefile` chains the numbered scripts in `scripts/` into one reproducible 
 
 The historical assembly and annotation scripts (01–15) are available as an optional template module.
 
-An end-to-end run reproduced the original genotype panels, PCA, ADMIXTURE and FST byte for byte. See [docs/WORKFLOW_VERIFICATION.md](../docs/WORKFLOW_VERIFICATION.md).
+The archived 2026-09-24 verification records a replay of the original genotype panels, PCA, ADMIXTURE and FST (with a documented network near-tie exception). This release does not rerun that analysis. See [docs/WORKFLOW_VERIFICATION.md](../docs/WORKFLOW_VERIFICATION.md).
 
 ## Quick start
 
@@ -56,17 +56,17 @@ Arguments, thread pools and PLINK memory settings come from the scripts; the rul
 
 ## Safety design
 
-The numbered scripts refuse to write into an existing output directory. The workflow keeps that behaviour and adds three barriers:
+The main population drivers refuse to reuse existing output directories. Protection is scoped to the following mechanisms; the historical assembly template and auxiliary outputs are not universally protected:
 
-1. **`frozen_dirs`** (`config/config.yaml`): the workflow stops at parse time if `results_dir` is one of these directories or lies inside one.
-2. **`protected()` on every data output** of the computational rules: Snakemake makes them read-only and raises `ProtectedOutputException` *before deleting anything* if a job would rerun, including under `--forcerun` and `--forceall`.
+1. **`frozen_dirs`** (`config/config.yaml`): the workflow stops at parse time if a population, assembly or research output root overlaps a frozen directory, including through a symlink.
+2. **`protected()` on the declared primary population outputs**: Snakemake makes them read-only and raises `ProtectedOutputException` *before deleting anything* if a job would rerun, including under `--forcerun` and `--forceall`.
 3. **`fresh()`**: Snakemake pre-creates the parents of declared outputs, which would trip the scripts' `mkdir(exist_ok=False)`. Before each script, `fresh()` removes that tree only if it holds nothing but empty directories. Otherwise it stops with "Refusing to reuse non-empty …".
 
 If a job fails midway, inspect the partial directory and move it aside before rerunning. Do not rely on `--rerun-incomplete`.
 
 ## Software environments
 
-`workflow/envs/` pins the versions used in the original analysis:
+`workflow/envs/` records environment constraints; exact observed versions and the distinction between historical and current checks are in [software_versions.md](../software_versions.md):
 
 - `popgen.yaml`: PLINK 1.90b6.21, ADMIXTURE 1.3.0, VCFtools 0.1.16. The full package list of the original environment is `popgen_production.explicit.txt`.
 - `relationships_py.yaml`: numpy 2.5.3, scipy 1.18.1, pandas 3.0.5, matplotlib 3.11.2, biopython 1.88, splitspy 0.0.10.
@@ -109,3 +109,9 @@ Not wrapped:
 
 - all unit tests in `tests/`, with bcftools/htslib and the compiled genotype-comparison helper;
 - `workflow/tests/dryrun.sh`, which dry-runs both targets with placeholder inputs and checks the `frozen_dirs` guard.
+
+## Later analyses (2026-10-16)
+
+The root Snakefile now optionally includes `workflow/rules/research.smk` through `config/research.yaml`. [Later-analysis workflow contracts](research/README.md) describe the nuclear locus/concordance, regional/balanced FST, conditional chloroplast simulation/validation and optional chloroplast-tree targets. These additions have engineering checks and dry-run validation; they do not extend the 2026-09-24 scientific replay claim.
+
+![Later comparative analysis map](../docs/figures/pipeline_comparative.svg)

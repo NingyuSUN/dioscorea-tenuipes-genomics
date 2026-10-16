@@ -1,0 +1,27 @@
+script	role	purpose	arguments
+scripts/research/population/spatial_fst.py	entrypoint	Quantify regional and leave-region-out sensitivity of pairwise population FST.	--plan --out --chunk-sites
+scripts/research/population/balanced_fst.py	entrypoint	Compare Weir–Cockerham and Hudson FST across all balanced IZU sample subsets.	--plan --out --chunk-sites
+scripts/research/chloroplast_ils/simulate.py	entrypoint	Simulate conditional plastid genealogies and JC69 distance scenarios.	--root --phase
+scripts/research/chloroplast_ils/validate.py	entrypoint	Validate simulated plastid topology frequencies and analytic distance probabilities.	--root --phase
+scripts/research/population/prepare_ab_beds.py	entrypoint	Prepare genotype panels under prespecified heterozygote allele-balance filters.	--vcf --baseline-prefix --out --bcftools --pilot-sites
+scripts/research/population/run_ab_sensitivity.py	entrypoint	Compare PCA and FST across allele-balance filters on matched population panels.	--masks --out --fst-core --tools --original-main --chunk-sites
+scripts/research/population/pl_diagnostic.py	entrypoint	Audit three-genotype likelihoods and their alignment to the selected SNP panel.	--vcf --bed --fai --out --p1-raw --bcftools
+scripts/research/population/extract_original_panel.py	entrypoint	Extract original-panel genotype likelihoods while preserving sample and site identity.	--out --original-prefix --refiltered-prefix --vcf --fai --bcftools
+scripts/research/nuclear/build_busco_matrices.py	entrypoint	Build single-copy BUSCO amino-acid matrices with fixed occupancy and marker exclusions.	--work-root --mafft --panel --taxa-json --dt --threads
+scripts/research/nuclear/audit_paired_fastq.py	entrypoint	Validate paired FASTQ structure, sequence alphabets and expected read counts.	--r1 --r2 --output --label --expected-bases --ena-read-count --decompressor --alphabet --progress-every-pairs
+scripts/research/nuclear/run_loci.py	entrypoint	Infer one supported IQ-TREE phylogeny per retained nuclear locus.	--root --iqtree --workers --mode
+scripts/research/nuclear/gene_concordance.py	entrypoint	Count concordant, alternative and unresolved gene-tree splits for each reference branch.	--root --reference-tree --pilot
+scripts/research/nuclear/audit_iqtree_gcf.py	entrypoint	Cross-check independent branch concordance counts against IQ-TREE gCF output.	--independent --iqtree-prefix --out
+scripts/research/nuclear/warning_sensitivity.py	entrypoint	Recalculate branch concordance after applying recorded gene-tree warning exclusions.	--source --out
+scripts/research/nuclear/project_locus_quartets.py	entrypoint	Project existing nuclear point and bootstrap trees onto the fixed focal quartet.	--root --source-root
+scripts/research/nuclear/audit_quartet_projection.py	entrypoint	Independently verify focal-quartet projection inputs and bootstrap counts.	--root --source-root --result --manifest --original-audit --receipt
+scripts/research/nuclear/marker_structure.py	entrypoint	Compare candidate historical marker segments with current gene-model structure.	--screen-directory --candidate-evidence --wgs-root --blastp --samtools --historical-annotation --output --self-test
+scripts/research/chloroplast/run_cp_trees.py	linux_guarded_entrypoint	Infer paired chloroplast trees on identical retained alignment columns.	--inputs --out --mode --execute
+scripts/research/chloroplast/prepare_expanded_cp.py	entrypoint	Admit validated additional plastomes into the fixed-column chloroplast matrix.	--config --source-profile --sample-parent --subset --execute --out
+scripts/research/chloroplast/run_source_au.py	linux_guarded_entrypoint	Run matched chloroplast-source searches and approximately unbiased topology comparisons.	--inputs --out --mode --execute
+scripts/research/chloroplast/recover_hachi_cp_callable.py	entrypoint	Recover callable chloroplast bases from competitive-reference read alignments.	--bam --reference --contig --competitive-reference --coordinate-proof --output-dir --preflight-only
+scripts/research/nuclear_ils/simulator/simulate_panel.py	linux_guarded_entrypoint	Generate conditional nuclear genealogies and amino-acid alignments with preserved missingness.	--fitted --fitted-sha256 --panel-id --task-id --out --inference-root --execution-contract --scope-receipt --execute
+scripts/research/nuclear_ils/inference/reestimate_panel.py	linux_guarded_entrypoint	Re-estimate gene trees from simulated alignments and summarize quartet outcomes.	--jobs --out --execute --freeze --deadline-utc
+scripts/research/panthaica/matched27/run_matched27.py	linux_guarded_entrypoint	Infer paired with/without-panthaica trees on the same 27 nuclear loci.	--config --execute
+scripts/research/panthaica/matched27/sensitivity/run_sensitivity.py	linux_guarded_entrypoint	Evaluate paired callable-site masking and leave-one-locus-out panthaica sensitivity.	--config --execute
+scripts/research/panthaica/matched27/prepare_matched27.py	entrypoint	Prepare paired matched-locus, callable-site and leave-one-locus-out panthaica inputs.	--mode --with-alignment --without-alignment --partitions --config --out

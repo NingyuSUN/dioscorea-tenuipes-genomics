@@ -1,0 +1,25 @@
+{
+  "purpose": "2026-10-16 public code engineering checks only; not a historical analysis environment",
+  "python": "3.12.14",
+  "packages": {
+    "snakemake": "9.27.0",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "pandas": "3.0.6",
+    "matplotlib": "3.11.2",
+    "biopython": "1.88",
+    "pysam": "0.24.1",
+    "splitspy": "0.0.10",
+    "pyyaml": "6.0.3",
+    "msprime": "1.4.4",
+    "tskit": "1.0.3"
+  },
+  "external_tools": {
+    "bcftools": "1.22",
+    "HTSlib": "1.22.1"
+  },
+  "external_tool_capture": [
+    "bcftools 1.22",
+    "Using htslib 1.22.1"
+  ]
+}

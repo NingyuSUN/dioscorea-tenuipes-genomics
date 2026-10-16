@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-16",
+  "timezone": "Asia/Tokyo",
+  "source_files": 70,
+  "classification_counts": {
+    "byte_identical": 61,
+    "CLI_path_resource_adapter": 4,
+    "generic_historical_path_normalization": 4,
+    "new_file_io_adapter": 1
+  },
+  "source_hashes_and_distributed_hashes": "../../workflow/research/SOURCE_MAP.csv",
+  "all_original_source_hashes_checked": true,
+  "all_output_hashes_checked": true,
+  "original_functions": 496,
+  "identical_function_AST": 493,
+  "other_function_changes": "Two CLI entry functions; one MAFFT tool-path substitution (same AST after tool-path normalization).",
+  "scientific_analysis_rerun": false,
+  "full_original_validation_receipts": "Retained outside the public release; summary covers source preservation and artificial checks only."
+}

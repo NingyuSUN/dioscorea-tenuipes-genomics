@@ -1,4 +1,5 @@
 import os
+import shlex
 from snakemake.exceptions import WorkflowError
 
 REPO = workflow.basedir
@@ -17,12 +18,16 @@ def helper(name):
 # Directories of completed runs. The numbered scripts refuse to overwrite
 # an existing output directory; this check adds a second barrier so that no
 # rule (and no --forcerun) can target them.
-for frozen in map(os.path.abspath, config.get("frozen_dirs", [])):
-    if R == frozen or R.startswith(frozen + os.sep):
-        raise WorkflowError(
-            f"results_dir {R} is inside the completed directory {frozen}. "
-            "Choose a new, empty results_dir; completed evidence is read-only."
-        )
+output_roots = [config["results_dir"]]
+if "assembly" in config:
+    output_roots.append(config["assembly"]["outdir"])
+if "research" in config:
+    output_roots.append(config["research"]["outdir"])
+for output_root in output_roots:
+    resolved = os.path.realpath(output_root)
+    for frozen in map(os.path.realpath, config.get("frozen_dirs", [])):
+        if os.path.commonpath([resolved, frozen]) in (resolved, frozen):
+            raise WorkflowError("Output overlaps a frozen directory; completed evidence is read-only.")
 
 TOOLS = config["tools"]
 PY = TOOLS.get("python") or "python"
@@ -46,8 +51,8 @@ def fresh(path):
     scripts 32/33/34/44/53/54/55 call mkdir(exist_ok=False). Remove the tree
     only if it holds nothing but empty directories; otherwise stop, because a
     partial earlier run must be inspected, not overwritten."""
+    quoted = shlex.quote(str(path))
     return (
-        f'if [ -d "{path}" ]; then find "{path}" -depth -type d -empty -delete; fi; '
-        f'if [ -e "{path}" ]; then echo "Refusing to reuse non-empty {path}; '
-        f'inspect or move it first." >&2; exit 1; fi; '
+        f"if [ -d {quoted} ]; then find {quoted} -depth -type d -empty -delete; fi; "
+        f"if [ -e {quoted} ]; then echo 'Refusing non-empty output; inspect it first.' >&2; exit 1; fi; "
     )

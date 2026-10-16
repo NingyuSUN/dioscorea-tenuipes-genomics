@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1200" viewBox="0 0 1680 1200" role="img" aria-labelledby="title description">
+<title id="title">Dioscorea tenuipes · analysis map</title>
+<desc id="description">Assembly, population genomics and organelle evidence connect to later comparative research. Solid teal arrows denote the configured workflow. Dashed amber arrows denote separate historical scripts or templates. Dotted blue arrows denote research data flow without an automation claim.</desc>
+<defs>
+  <marker id="configured" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,5 L0,10 Z" fill="#087D86"/></marker>
+  <marker id="historical" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,5 L0,10 Z" fill="#A4660A"/></marker>
+  <marker id="research" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,5 L0,10 Z" fill="#647D92"/></marker>
+</defs>
+<style>text {font-family:Arial,Helvetica,sans-serif;fill:#17344F;} .subtitle {fill:#52687B;} .note {fill:#52687B;} </style>
+<rect width="1680" height="1200" fill="white"/>
+<text x="64" y="66" font-size="36" font-weight="700" text-anchor="start" style="fill:#17344F">Dioscorea tenuipes · analysis map</text>
+<text x="64" y="108" font-size="21" font-weight="400" text-anchor="start" style="fill:#52687B">Assembly, population genomics and organelle evidence connect to later comparative research.</text>
+<path d="M64 134 H1616" stroke="#CCD7E0" stroke-width="2"/>
+<rect x="64" y="165" width="1552" height="200" rx="18" fill="#F6F8FB"/>
+<text x="88" y="199" font-size="18" font-weight="700" text-anchor="start" style="fill:#17344F">01  NUCLEAR ASSEMBLY AND ANNOTATION</text>
+<rect x="88" y="225" width="340" height="112" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M102 226 H414" stroke="#A4660A" stroke-width="4" stroke-linecap="round"/>
+<text x="110" y="260" font-size="23" font-weight="700" text-anchor="start" style="fill:#A4660A">Sequencing inputs</text>
+<text x="110" y="289" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Nanopore · Illumina · RNA-seq</text>
+<rect x="570" y="225" width="490" height="112" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M584 226 H1046" stroke="#A4660A" stroke-width="4" stroke-linecap="round"/>
+<text x="592" y="260" font-size="23" font-weight="700" text-anchor="start" style="fill:#A4660A">Assembly + annotation</text>
+<text x="592" y="289" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Assembly, polishing, QC, gene models</text>
+<text x="592" y="319" font-size="16" font-weight="700" text-anchor="start" style="fill:#A4660A">SCRIPTS 01–15 · OPTIONAL TEMPLATE</text>
+<rect x="1190" y="225" width="400" height="112" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M1204 226 H1576" stroke="#A4660A" stroke-width="4" stroke-linecap="round"/>
+<text x="1212" y="260" font-size="23" font-weight="700" text-anchor="start" style="fill:#A4660A">Nuclear reference</text>
+<text x="1212" y="289" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Reference sequence + annotation</text>
+<path d="M428 280 L570 280" fill="none" stroke="#A4660A" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="10 7" marker-end="url(#historical)"/>
+<path d="M1060 280 L1190 280" fill="none" stroke="#A4660A" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="10 7" marker-end="url(#historical)"/>
+<rect x="64" y="395" width="1552" height="230" rx="18" fill="#EFF8F8"/>
+<text x="88" y="429" font-size="18" font-weight="700" text-anchor="start" style="fill:#087D86">02  POPULATION GENOMICS</text>
+<rect x="88" y="455" width="340" height="140" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M102 456 H414" stroke="#A4660A" stroke-width="4" stroke-linecap="round"/>
+<text x="110" y="490" font-size="23" font-weight="700" text-anchor="start" style="fill:#A4660A">Population VCF + audit</text>
+<text x="110" y="519" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Joint calling: script 21</text>
+<text x="110" y="548" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Input checks: scripts 30–31</text>
+<rect x="505" y="455" width="300" height="140" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M519 456 H791" stroke="#087D86" stroke-width="4" stroke-linecap="round"/>
+<text x="527" y="490" font-size="23" font-weight="700" text-anchor="start" style="fill:#087D86">Genotype panels</text>
+<text x="527" y="519" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Masking + site selection</text>
+<text x="527" y="577" font-size="16" font-weight="700" text-anchor="start" style="fill:#087D86">SCRIPT 32</text>
+<rect x="882" y="455" width="320" height="140" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M896 456 H1188" stroke="#087D86" stroke-width="4" stroke-linecap="round"/>
+<text x="904" y="490" font-size="23" font-weight="700" text-anchor="start" style="fill:#087D86">Population structure</text>
+<text x="904" y="519" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">PCA · ADMIXTURE · FST</text>
+<text x="904" y="577" font-size="16" font-weight="700" text-anchor="start" style="fill:#087D86">SCRIPTS 33–34</text>
+<rect x="1278" y="455" width="312" height="140" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M1292 456 H1576" stroke="#087D86" stroke-width="4" stroke-linecap="round"/>
+<text x="1300" y="490" font-size="23" font-weight="700" text-anchor="start" style="fill:#087D86">Related analyses</text>
+<text x="1300" y="519" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Relationships: 44–49</text>
+<text x="1300" y="548" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Sample influence: 53–55</text>
+<path d="M428 525 L505 525" fill="none" stroke="#A4660A" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="10 7" marker-end="url(#historical)"/>
+<path d="M805 525 L882 525" fill="none" stroke="#087D86" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#configured)"/>
+<path d="M1202 525 L1278 525" fill="none" stroke="#087D86" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#configured)"/>
+<path d="M655 455 L655 440 L1434 440 L1434 455" fill="none" stroke="#087D86" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#configured)"/>
+<path d="M1390 337 L1390 380 L50 380 L50 525 L88 525" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<text x="716" y="375" font-size="16" font-weight="400" text-anchor="start" style="fill:#52687B">reference for variant calling</text>
+<rect x="64" y="655" width="1552" height="200" rx="18" fill="#FCF7ED"/>
+<text x="88" y="689" font-size="18" font-weight="700" text-anchor="start" style="fill:#A4660A">03  ORGANELLE EVIDENCE</text>
+<rect x="88" y="715" width="340" height="112" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M102 716 H414" stroke="#A4660A" stroke-width="4" stroke-linecap="round"/>
+<text x="110" y="750" font-size="23" font-weight="700" text-anchor="start" style="fill:#A4660A">Reads + references</text>
+<text x="110" y="779" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Organelle input evidence</text>
+<rect x="570" y="715" width="490" height="112" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M584 716 H1046" stroke="#A4660A" stroke-width="4" stroke-linecap="round"/>
+<text x="592" y="750" font-size="23" font-weight="700" text-anchor="start" style="fill:#A4660A">Recovery + evidence checks</text>
+<text x="592" y="779" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Assembly, annotation, read support</text>
+<text x="592" y="809" font-size="16" font-weight="700" text-anchor="start" style="fill:#A4660A">SCRIPTS 16–20 / 35–43</text>
+<rect x="1190" y="715" width="400" height="112" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M1204 716 H1576" stroke="#A4660A" stroke-width="4" stroke-linecap="round"/>
+<text x="1212" y="750" font-size="23" font-weight="700" text-anchor="start" style="fill:#A4660A">Organelle candidates</text>
+<text x="1212" y="779" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Sequence and evidence summaries</text>
+<path d="M428 770 L570 770" fill="none" stroke="#A4660A" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="10 7" marker-end="url(#historical)"/>
+<path d="M1060 770 L1190 770" fill="none" stroke="#A4660A" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="10 7" marker-end="url(#historical)"/>
+<text x="88" y="907" font-size="18" font-weight="700" text-anchor="start" style="fill:#17344F">LATER RESEARCH · data relationships; automation status in workflow documentation</text>
+<rect x="88" y="932" width="348" height="125" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M102 933 H422" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="110" y="967" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Nuclear markers</text>
+<text x="110" y="996" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Alignment + gene trees</text>
+<text x="110" y="1025" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Gene concordance</text>
+<rect x="474" y="932" width="348" height="125" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M488 933 H808" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="496" y="967" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Chloroplast sensitivity</text>
+<text x="496" y="996" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Topology · source choice</text>
+<text x="496" y="1025" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Alignment / masking choices</text>
+<rect x="860" y="932" width="348" height="125" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M874 933 H1194" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="882" y="967" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Matched comparison</text>
+<text x="882" y="996" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">D. panthaica comparison</text>
+<text x="882" y="1025" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Matched marker definitions</text>
+<rect x="1246" y="932" width="344" height="125" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M1260 933 H1576" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="1268" y="967" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Conditional ILS</text>
+<text x="1268" y="996" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Scenario-based interpretation</text>
+<text x="1268" y="1025" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Assumptions remain explicit</text>
+<path d="M64 1088 H1616" stroke="#CCD7E0" stroke-width="1.5"/>
+<path d="M64 1112 L119 1112" fill="none" stroke="#087D86" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#configured)"/>
+<text x="136" y="1119" font-size="18" font-weight="400" text-anchor="start" style="fill:#17344F">Configured workflow</text>
+<path d="M504 1112 L559 1112" fill="none" stroke="#A4660A" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="10 7" marker-end="url(#historical)"/>
+<text x="576" y="1119" font-size="18" font-weight="400" text-anchor="start" style="fill:#17344F">Historical scripts / templates</text>
+<path d="M1070 1112 L1125 1112" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<text x="1142" y="1119" font-size="18" font-weight="400" text-anchor="start" style="fill:#17344F">Research data flow only</text>
+<text x="64" y="1157" font-size="18" font-weight="400" text-anchor="start" style="fill:#52687B">Method map only. Arrows do not certify completed runs, biological validity or a causal mechanism.</text>
+</svg>

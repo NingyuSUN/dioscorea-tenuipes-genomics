@@ -26,6 +26,10 @@ if "assembly" in config:
     include: "workflow/rules/assembly.smk"
 
 
+if "research" in config:
+    include: "workflow/rules/research.smk"
+
+
 MODULE_TARGETS = {
     "population": POPULATION_TARGETS,
     "relationships": RELATIONSHIP_TARGETS,

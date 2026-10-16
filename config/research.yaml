@@ -1,0 +1,19 @@
+# Optional later-analysis targets. Paths refer to prepared historical inputs,
+# supplied separately. These are not a raw-read-to-paper reconstruction.
+research:
+  outdir: results_research
+  python: python
+  iqtree: iqtree2
+  locus_workers: 3
+  chunk_sites: 100000
+  # Deliberately separate from config.targets: select research targets explicitly.
+  modules: [nuclear, population, chloroplast_ils]
+  nuclear_input_root: data/research/nuclear
+  reference_tree: data/research/nuclear/reference.treefile
+  spatial_plan: data/research/population/spatial_plan.json
+  balanced_plan: data/research/population/balanced_plan.json
+  chloroplast_ils_input_root: data/research/chloroplast_ils
+  chloroplast_ils_phase: full
+  # The CP tree driver requires the original prepared 95/94 panels and a
+  # bounded Linux cgroup. It is opt-in; Snakemake mem_mb is not a cgroup limit.
+  cp_inputs: data/research/chloroplast

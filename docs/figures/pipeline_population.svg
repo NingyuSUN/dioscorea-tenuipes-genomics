@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1190" viewBox="0 0 1680 1190" role="img" aria-labelledby="title description">
+<title id="title">Population genomics · inputs, panels and sensitivity</title>
+<desc id="description">Original contig coordinates are retained throughout the configured population workflow. Solid teal arrows denote the configured workflow. Dashed amber arrows denote separate historical scripts or templates. Dotted blue arrows denote research data flow without an automation claim.</desc>
+<defs>
+  <marker id="configured" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,5 L0,10 Z" fill="#087D86"/></marker>
+  <marker id="historical" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,5 L0,10 Z" fill="#A4660A"/></marker>
+  <marker id="research" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,5 L0,10 Z" fill="#647D92"/></marker>
+</defs>
+<style>text {font-family:Arial,Helvetica,sans-serif;fill:#17344F;} .subtitle {fill:#52687B;} .note {fill:#52687B;} </style>
+<rect width="1680" height="1190" fill="white"/>
+<text x="64" y="66" font-size="36" font-weight="700" text-anchor="start" style="fill:#17344F">Population genomics · inputs, panels and sensitivity</text>
+<text x="64" y="108" font-size="21" font-weight="400" text-anchor="start" style="fill:#52687B">Original contig coordinates are retained throughout the configured population workflow.</text>
+<path d="M64 134 H1616" stroke="#CCD7E0" stroke-width="2"/>
+<rect x="64" y="165" width="1552" height="235" rx="18" fill="#F6F8FB"/>
+<text x="88" y="199" font-size="18" font-weight="700" text-anchor="start" style="fill:#17344F">INPUT CONTRACT AND GENOTYPE SELECTION</text>
+<rect x="88" y="228" width="400" height="142" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M102 229 H474" stroke="#A4660A" stroke-width="4" stroke-linecap="round"/>
+<text x="110" y="263" font-size="23" font-weight="700" text-anchor="start" style="fill:#A4660A">Joint population VCF</text>
+<text x="110" y="292" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Called VCF + sample manifest</text>
+<text x="110" y="321" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Upstream variant calling: script 21</text>
+<rect x="638" y="228" width="400" height="142" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M652 229 H1024" stroke="#A4660A" stroke-width="4" stroke-linecap="round"/>
+<text x="660" y="263" font-size="23" font-weight="700" text-anchor="start" style="fill:#A4660A">Input audit</text>
+<text x="660" y="292" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Allele / genotype comparison</text>
+<text x="660" y="321" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Sample-quality diagnostics</text>
+<text x="660" y="352" font-size="16" font-weight="700" text-anchor="start" style="fill:#A4660A">SCRIPTS 30–31</text>
+<rect x="1188" y="228" width="402" height="142" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M1202 229 H1576" stroke="#087D86" stroke-width="4" stroke-linecap="round"/>
+<text x="1210" y="263" font-size="23" font-weight="700" text-anchor="start" style="fill:#087D86">Masked genotype panels</text>
+<text x="1210" y="292" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Per-sample masks + site filters</text>
+<text x="1210" y="321" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Missing calls remain missing</text>
+<text x="1210" y="352" font-size="16" font-weight="700" text-anchor="start" style="fill:#087D86">SCRIPT 32</text>
+<path d="M488 299 L638 299" fill="none" stroke="#A4660A" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="10 7" marker-end="url(#historical)"/>
+<path d="M1038 299 L1188 299" fill="none" stroke="#A4660A" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="10 7" marker-end="url(#historical)"/>
+<text x="88" y="449" font-size="18" font-weight="700" text-anchor="start" style="fill:#087D86">CONFIGURED ANALYSIS MODULES</text>
+<rect x="88" y="507" width="470" height="188" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M102 508 H544" stroke="#087D86" stroke-width="4" stroke-linecap="round"/>
+<text x="110" y="542" font-size="23" font-weight="700" text-anchor="start" style="fill:#087D86">Population structure</text>
+<text x="110" y="571" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">PCA and ADMIXTURE</text>
+<text x="110" y="600" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Pairwise and window FST</text>
+<text x="110" y="629" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">QC-aware summaries</text>
+<text x="110" y="677" font-size="16" font-weight="700" text-anchor="start" style="fill:#087D86">SCRIPTS 33–34</text>
+<rect x="605" y="507" width="470" height="188" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M619 508 H1061" stroke="#087D86" stroke-width="4" stroke-linecap="round"/>
+<text x="627" y="542" font-size="23" font-weight="700" text-anchor="start" style="fill:#087D86">Individual relationships</text>
+<text x="627" y="571" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">IBS distances · NJ trees · networks</text>
+<text x="627" y="600" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Relatedness and sensitivity panels</text>
+<text x="627" y="629" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Cross-implementation checks</text>
+<text x="627" y="677" font-size="16" font-weight="700" text-anchor="start" style="fill:#087D86">SCRIPTS 44–49</text>
+<rect x="1122" y="507" width="468" height="188" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M1136 508 H1576" stroke="#087D86" stroke-width="4" stroke-linecap="round"/>
+<text x="1144" y="542" font-size="23" font-weight="700" text-anchor="start" style="fill:#087D86">Sample influence</text>
+<text x="1144" y="571" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Leave-one-out and candidate subsets</text>
+<text x="1144" y="600" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">PCA and FST sensitivity</text>
+<text x="1144" y="629" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Comparative summary tables</text>
+<text x="1144" y="677" font-size="16" font-weight="700" text-anchor="start" style="fill:#087D86">SCRIPTS 53–55</text>
+<path d="M1389 370 L1389 480 L323 480 L323 507" fill="none" stroke="#087D86" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#configured)"/>
+<path d="M840 480 L840 507" fill="none" stroke="#087D86" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#configured)"/>
+<path d="M1356 480 L1356 507" fill="none" stroke="#087D86" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#configured)"/>
+<rect x="64" y="751" width="1552" height="265" rx="18" fill="#F6F8FB"/>
+<text x="88" y="785" font-size="18" font-weight="700" text-anchor="start" style="fill:#17344F">LATER RESEARCH · separate input contracts and execution status</text>
+<rect x="88" y="820" width="680" height="160" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M102 821 H754" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="110" y="855" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Spatial + balanced-sample FST</text>
+<text x="110" y="884" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Regional / leave-region-out sensitivity</text>
+<text x="110" y="913" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Balanced subsets and estimator comparisons</text>
+<text x="110" y="962" font-size="16" font-weight="700" text-anchor="start" style="fill:#17344F">INPUT: RETAINED VARIANT / GENOTYPE PANELS</text>
+<rect x="908" y="820" width="682" height="160" rx="12" fill="white" stroke="#CCD7E0" stroke-width="1.6"/>
+<path d="M922 821 H1576" stroke="#17344F" stroke-width="4" stroke-linecap="round"/>
+<text x="930" y="855" font-size="23" font-weight="700" text-anchor="start" style="fill:#17344F">Genotype-likelihood sensitivity</text>
+<text x="930" y="884" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Source VCF PL fields + matched SNP panel</text>
+<text x="930" y="913" font-size="20" font-weight="400" text-anchor="start" style="fill:#52687B">Explicit three-genotype likelihood model checks</text>
+<text x="930" y="962" font-size="16" font-weight="700" text-anchor="start" style="fill:#17344F">PL LIKELIHOODS ARE NOT POSTERIOR PROBABILITIES</text>
+<path d="M323 695 L323 725 L50 725 L50 900 L88 900" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<text x="1030" y="790" font-size="18" font-weight="400" text-anchor="start" style="fill:#52687B">Source VCF PL + matched panel</text>
+<path d="M1249 798 L1249 820" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<text x="70" y="1056" font-size="19" font-weight="400" text-anchor="start" style="fill:#52687B">Interpretation: assess sensitivity to data selection and sample composition; do not infer mechanism from a single plot.</text>
+<path d="M64 1076 H1616" stroke="#CCD7E0" stroke-width="1.5"/>
+<path d="M64 1100 L119 1100" fill="none" stroke="#087D86" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#configured)"/>
+<text x="136" y="1107" font-size="18" font-weight="400" text-anchor="start" style="fill:#17344F">Configured workflow</text>
+<path d="M504 1100 L559 1100" fill="none" stroke="#A4660A" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="10 7" marker-end="url(#historical)"/>
+<text x="576" y="1107" font-size="18" font-weight="400" text-anchor="start" style="fill:#17344F">Historical scripts / templates</text>
+<path d="M1070 1100 L1125 1100" fill="none" stroke="#647D92" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 7" marker-end="url(#research)"/>
+<text x="1142" y="1107" font-size="18" font-weight="400" text-anchor="start" style="fill:#17344F">Research data flow only</text>
+<text x="64" y="1145" font-size="18" font-weight="400" text-anchor="start" style="fill:#52687B">Method map only. Arrows do not certify completed runs, biological validity or a causal mechanism.</text>
+</svg>

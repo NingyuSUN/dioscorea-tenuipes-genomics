@@ -1,3 +1,11 @@
 # Snakemake run metadata
 .snakemake/
 __pycache__/
+
+# Local inputs, generated outputs and user-specific configuration
+/data/
+/results/
+/results_*/
+/config/*.local.yaml
+.pytest_cache/
+*.pyc
