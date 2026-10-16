@@ -3,11 +3,22 @@
 ## Current state
 
 - **Objective:** make all 22 historical scripts configurable, close dependencies and connect compatible workflows for public code review.
-- **Phase:** portability and engineering verification complete; public commit/push pending at index preparation.
+- **Phase:** portability release published; CI environment compatibility repair pending at index preparation.
 - **Last verified:** 2026-10-16T12:40:13+09:00 (Asia/Tokyo). 119 artificial-input unit/integration tests passed; 22 safe CLI checks passed; original/research and six portable workflow dry runs passed.
 - **Entry points:** [README](README.md), [script purposes](docs/SCRIPT_CATALOG.md), [portable workflow](workflow/portable/README.md), [configuration examples](config/portable/README.md), [release checks](docs/PORTABLE_SCRIPTS_2026-10-16.md).
 - **Limits:** real-data replay, actual systemd/cgroup execution and original external-tool compatibility remain unverified. Fixed sample/site/hash contracts remain active. No analysis was rerun.
-- **Next:** review/use the published code with matching inputs; any scientific execution remains a separate action. No unfinished code-review findings are recorded for this release.
+- **Next:** review/use the published code with matching inputs; any scientific execution remains a separate action. No unfinished code-review findings are recorded for this release; verify the repaired CI environment after publication.
+
+## 2026-10-16 — CI environment compatibility repair
+
+| Field | Record |
+|---|---|
+| Date | 2026-10-16, Asia/Tokyo; environment failure inspected after public push. |
+| Purpose | Repair the GitHub Actions environment without changing scientific code or rerunning analysis. |
+| Inputs and code | Published portability commit `ac18c48a19f8519fd4fb86f80a3a1b2d59c2ef3f`; Actions run `38846967458`. Its setup log reports Conda msprime 1.4.4 requiring GSL 2.8 while available bcftools requires GSL below 2.8. |
+| Results and limits | Move the same pinned msprime/tskit versions to pip wheels, matching the locally checked Python environment. The 119 local tests remain passed; the first remote run never reached tests. Successful CI after this repair must be verified separately. No scientific calculation was executed. |
+| Deliverables | `workflow/envs/ci.yaml`; updated portability verification note and this index. |
+| Git / GitHub | Remote `main` was live-verified at `ac18c48a19f8519fd4fb86f80a3a1b2d59c2ef3f`. This environment-only repair is pending commit/push at index preparation. Code/configuration/docs are the synchronized scope; raw data remain external. |
 
 ## 2026-10-16 — Configurable historical stages
 

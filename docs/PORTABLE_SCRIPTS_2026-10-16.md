@@ -96,3 +96,12 @@ binding names a verified completed upstream artifact. This writes a separate
 execution configuration; it never changes the user's configuration or silently
 replaces an already specified different hash. Fixed historical scientific
 identities and admission checks are not relaxed by that mechanism.
+
+## CI environment repair
+
+The first GitHub run for `ac18c48` stopped before tests because Conda's msprime
+1.4.4 required GSL 2.8 while available bcftools packages required GSL below 2.8.
+The CI specification installs the same pinned msprime 1.4.4 and tskit 1.0.3 through
+pip wheels, matching the locally tested Python environment and leaving bcftools
+with its compatible Conda libraries. This changes environment installation only;
+no scientific scripts or research results are changed by the repair.

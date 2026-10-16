@@ -17,7 +17,8 @@ dependencies:
   - snakemake-minimal>=8
   - pip
   - pysam
-  - msprime=1.4.4
-  - tskit=1.0.3
   - pip:
       - splitspy==0.0.10
+      # Wheels avoid the Conda msprime/bcftools GSL ABI conflict.
+      - msprime==1.4.4
+      - tskit==1.0.3
