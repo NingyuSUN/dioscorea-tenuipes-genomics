@@ -2,12 +2,24 @@
 
 ## Current state
 
-- **Objective:** make all 22 historical scripts configurable, close dependencies and connect compatible workflows for public code review.
-- **Phase:** portability release published; CI environment compatibility repair pending at index preparation.
-- **Last verified:** 2026-10-16T12:40:13+09:00 (Asia/Tokyo). 119 artificial-input unit/integration tests passed; 22 safe CLI checks passed; original/research and six portable workflow dry runs passed.
-- **Entry points:** [README](README.md), [script purposes](docs/SCRIPT_CATALOG.md), [portable workflow](workflow/portable/README.md), [configuration examples](config/portable/README.md), [release checks](docs/PORTABLE_SCRIPTS_2026-10-16.md).
-- **Limits:** real-data replay, actual systemd/cgroup execution and original external-tool compatibility remain unverified. Fixed sample/site/hash contracts remain active. No analysis was rerun.
-- **Next:** review/use the published code with matching inputs; any scientific execution remains a separate action. No unfinished code-review findings are recorded for this release; verify the repaired CI environment after publication.
+- **Objective:** make the current assembly, population and marker QC easy to inspect in the public README.
+- **Phase:** documentation update prepared from preserved results; no scientific rerun.
+- **Last verified:** 2026-10-19T15:08:54+09:00 (Asia/Tokyo). Live public main equals baseline `2bc5ab2bf9ce3d7c0d673ff0b2320dd2b32daa4b`. The earlier CI environment repair succeeded in [run 38847206068](https://github.com/NingyuSUN/dioscorea-tenuipes-genomics/actions/runs/38847206068); it is no longer pending.
+- **Entry points:** [README QC](README.md#quality-control), [aggregate QC snapshot](docs/provenance/qc_summary.json), [script purposes](docs/SCRIPT_CATALOG.md), [software versions](software_versions.md), [workflows](workflow/README.md).
+- **Verified scope and limits:** existing h2 continuity, genotype/site thresholds, retained population-panel counts, PCA sensitivity and marker sequence correspondence. These do not establish genome-wide base accuracy, specimen identity or an evolutionary mechanism. Full raw inputs/result archives remain external. Historical engineering checks remain distinct from scientific validation.
+- **Git / publication:** branch `public-update-20261016`, baseline above; README, QC snapshot and index are intended for one local commit followed by the requested public-main update. Remote state after publication is verified separately; query `git log -1 -- PROJECT_INDEX.md` for this record's commit.
+- **Next:** use the published summary to review the existing QC and associated code; no analysis is scheduled by this documentation change.
+
+## 2026-10-19 — Public QC summary
+
+| Field | Record |
+|---|---|
+| Date | 2026-10-19T15:08:54+09:00, Asia/Tokyo. Source results retain their September–October 2026 dates. |
+| Purpose | Add existing QC details to the public README in English, using aggregate evidence and explicit denominators. Documentation and source verification only. |
+| Inputs and code | Preserved assembly/read audits, population result summaries, nuclear CDS-correspondence table and plastid sensitivity report. Source-record checksums are in the QC snapshot; public scripts 32–34 and the nuclear matrix/CDS-audit implementations were checked against the text. Known public baseline `2bc5ab2bf9ce3d7c0d673ff0b2320dd2b32daa4b`; no scientific code executed or large data rehashed. |
+| Main results and limits | Current h2: 403,772,333 bp, 9,423 contigs, N50 103,611 bp. Main population panel: 14/16 study individuals, 5,564,311 SNPs, 37,566 PCA SNPs; strict/complete-call/one-per-contig comparisons preserve the recorded high distance correlations. Nuclear correspondence: 149/173 exact, all 24 other records retained. QC categories and limits are stated; no claim of blanket short-contig removal or whole-genome validation. |
+| Deliverables and validation | README quality-control section and `docs/provenance/qc_summary.json`; numeric/source, relative-link, privacy and scoped-diff checks. Existing prior CI success verified live; this is not a new scientific validation. Original correspondence, private infrastructure details and biological mechanism claims are excluded. |
+| Git / GitHub | https://github.com/NingyuSUN/dioscorea-tenuipes-genomics ; local branch `public-update-20261016`, publication target `main`. Baseline was live-verified equal to public main before editing; these three files will be committed and published. Publication readback is required before reporting synchronization. Raw data and full private evidence archives are outside this upload. |
 
 ## 2026-10-16 — CI environment compatibility repair
 

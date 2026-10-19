@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "prepared_at": "2026-10-19T15:08:54+09:00",
+  "scope": "Aggregate QC from preserved September-October 2026 results; no scientific analysis rerun for this documentation update.",
+  "availability": "Aggregate values are published here; full source records, raw reads and result archives are retained separately and are not included in this repository. Source-record hashes identify preserved small records and are not a public raw-data release.",
+  "assembly": {
+    "label": "h2 original contigs",
+    "recorded_fasta_sha256": "36fecc3e8b3054728d9779d22d61957062fd914bf24cd04f09e27d363d97c87b",
+    "statistics": {
+      "sequences": 9423,
+      "bases": 403772333,
+      "longest_bp": 2824417,
+      "N50": 103611,
+      "L50": 1084,
+      "N90": 19037,
+      "L90": 4559
+    },
+    "population_coordinate_system": "original contigs",
+    "source_record": "assembly_audit_20260930",
+    "interpretation": "Continuity metrics; consensus accuracy and genome completeness are not inferred from these values."
+  },
+  "reference_reads": {
+    "filtered_nanopore": {
+      "reads": 862169,
+      "bases": 19241033653,
+      "read_N50_bp": 36881,
+      "source_record": "read_summary_audit_20260930"
+    },
+    "illumina": {
+      "read_ends_combined": 155488036,
+      "read_length_bp": 150,
+      "bases": 23323205400,
+      "evidence": "Author-confirmed R1+R2 counting unit; arithmetic yield, not a new raw-read recount.",
+      "source_record": "reference_illumina_count_confirmation_20260930"
+    }
+  },
+  "population": {
+    "source_samples": 19,
+    "study_samples": 16,
+    "public_comparators": 3,
+    "main_retained_study_samples": 14,
+    "supplementary_samples": 17,
+    "excluded_study_samples": {
+      "count": 2,
+      "reasons": [
+        "very low supported-genotype fraction",
+        "exceptional heterozygosity"
+      ],
+      "rule": "Two recorded sample-specific exclusions, not a universal sample-missingness cutoff."
+    },
+    "variant_type": "PASS biallelic SNPs",
+    "genotype_handling": "Partial calls and calls with missing DP/GQ or failing the panel thresholds are masked; allele counts are recalculated after masking and sample selection.",
+    "panels": {
+      "main14": {
+        "samples": 14,
+        "thresholds": {
+          "min_DP": 5,
+          "max_DP": 100,
+          "min_GQ": 20,
+          "max_missing": 0.1,
+          "min_MAC": 1
+        },
+        "SNPs": 5564311,
+        "PCA_SNPs": 37566
+      },
+      "strict14": {
+        "samples": 14,
+        "thresholds": {
+          "min_DP": 8,
+          "max_DP": 60,
+          "min_GQ": 30,
+          "max_missing": 0.1,
+          "min_MAC": 1
+        },
+        "SNPs": 3969581,
+        "PCA_SNPs": 32805
+      },
+      "complete14": {
+        "samples": 14,
+        "thresholds": {
+          "min_DP": 5,
+          "max_DP": 100,
+          "min_GQ": 20,
+          "max_missing": 0.0,
+          "min_MAC": 1
+        },
+        "SNPs": 3367199,
+        "PCA_SNPs": 34908
+      }
+    },
+    "PCA_selection": {
+      "min_MAC": 2,
+      "within_contig_spacing_bp": 1000,
+      "PLINK_indep_pairwise": [
+        "50kb",
+        "1",
+        "0.2"
+      ],
+      "main_one_per_contig_SNPs": 7829
+    },
+    "PCA_sensitivity": {
+      "definition": "Pearson correlation of pairwise Euclidean distances in the first-two-PC plane, comparing the same 14 study plants with the main analysis.",
+      "strict_r": 0.9998441873119568,
+      "complete_call_r": 0.9999286964456646,
+      "one_per_contig_r": 0.9994933233664675,
+      "interpretation": "Descriptive consistency under tested filtering choices; not genotype accuracy or independent biological validation."
+    },
+    "source_record": "population_summary_20260914",
+    "public_code": [
+      "scripts/32_filter_population_variants.py",
+      "scripts/33_run_population_structure.py",
+      "scripts/34_summarize_population_results.py"
+    ]
+  },
+  "nuclear_markers": {
+    "markers": 173,
+    "taxa": 12,
+    "candidate_class": "BUSCO complete single-copy",
+    "filters": {
+      "min_protein_aa": 50,
+      "min_canonical_residue_fraction": 0.95,
+      "internal_stops_allowed": 0,
+      "min_taxon_occupancy": 0.8,
+      "min_column_occupancy": 0.8,
+      "min_retained_alignment_columns": 50,
+      "min_present_sequence_coverage": 0.5
+    },
+    "recorded_excluded_marker": "2661at3193",
+    "exclusion_scope": "Recorded orthogroup/annotation uncertainty; not a blanket source-contig-length filter.",
+    "genomic_CDS_correspondence": {
+      "exact": 149,
+      "total": 173,
+      "non_exact_or_partial": 24,
+      "non_exact_records_retained": true,
+      "interpretation": "CDS extraction and translation at aligner-selected coordinates; internal sequence correspondence, not independent read validation or genome-wide accuracy.",
+      "source_record": "nuclear_cds_correspondence_20261005"
+    },
+    "public_code": [
+      "scripts/research/nuclear/build_busco_matrices.py",
+      "scripts/research/nuclear/historical/genomic_cds_translation.py"
+    ]
+  },
+  "plastid_checks": {
+    "scope": "Orientation/inverted-repeat normalization, conservative read-backed recovery for selected samples, and alignment/model/masking/source-sensitivity comparisons.",
+    "limit": "Read-backed recovery checks apply to selected samples, not every public plastome; sensitivity comparisons reuse sequence evidence.",
+    "source_record": "plastid_sensitivity_review_20260929"
+  },
+  "source_records": [
+    {
+      "id": "assembly_audit_20260930",
+      "record_name": "ASSEMBLY_RAGTAG_AUDIT.json",
+      "sha256": "40d20a3abd54fd2cf7c4e32edfe4a53d4d3361a0db00dfdd1845bcb1bd73724c"
+    },
+    {
+      "id": "read_summary_audit_20260930",
+      "record_name": "SEQUENCING_METHODS_AUDIT.json",
+      "sha256": "97b18bfaf5ad57de88e6a340891fbb39af9177d123434fd968e0474604dca948"
+    },
+    {
+      "id": "reference_illumina_count_confirmation_20260930",
+      "record_name": "AUTHOR_CONFIRMATION_20260930.json",
+      "sha256": "b2a50ab5da81cece5dd45c8b9441b45ce02670614446ca9a10b8a4055b13582b"
+    },
+    {
+      "id": "population_summary_20260914",
+      "record_name": "results_summary.json",
+      "sha256": "c9a1cea4d6a32eeae50b936183df907a2b430dfc687a5f292ec8b42d7f77a985"
+    },
+    {
+      "id": "nuclear_cds_correspondence_20261005",
+      "record_name": "Supplementary_Table_S8d_per_gene_strata.tsv",
+      "sha256": "148aeba6841b37415444b63e6c5048a238e3132f90b094a56d07ce8e00b0635a"
+    },
+    {
+      "id": "plastid_sensitivity_review_20260929",
+      "record_name": "PROGRESS_ZH.md",
+      "sha256": "88ef947a655ecc21facbeba82a17b15af00b20ff08219716d9afd6f099e3c05a"
+    }
+  ]
+}
